@@ -34,7 +34,7 @@ const alternatives: Record<Language, string> = {
 };
 
 const tierLimits = {
-  3: { totalWords: 60, sentenceWords: 8 },
+  3: { totalWords: 400, sentenceWords: 12 },
   6: { totalWords: 120, sentenceWords: 12 },
   10: { totalWords: 200, sentenceWords: 18 },
 } as const;

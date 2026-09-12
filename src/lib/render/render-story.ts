@@ -13,6 +13,7 @@ import { ValidationFailure, validateStory } from "../validator/validate-story";
 import { buildBeatPrompt, getBeatWordBudget } from "./prompt";
 
 export const OPENROUTER_MODEL = "openai/gpt-4.1-mini";
+export const TIER_THREE_MODEL = "google/gemini-2.5-flash";
 export const MAX_RENDER_ATTEMPTS = 4;
 
 export type RenderResult =
@@ -27,6 +28,8 @@ export type CandidateGenerator = (
 ) => Promise<RenderedStory>;
 
 const modelBeatSchema = renderedBeatSchema.omit({ index: true });
+const modelFor = (intake: Intake) =>
+  intake.age_tier === 3 ? TIER_THREE_MODEL : OPENROUTER_MODEL;
 
 function responseSchema() {
   return {
@@ -103,14 +106,15 @@ function candidateFromBeats(
   });
 }
 
-async function repairWholeStory(
+async function renderWholeStory(
   client: OpenAI,
   intake: Intake,
   template: ProcedureTemplate,
-  previousCandidate: RenderedStory,
+  previousCandidate: RenderedStory | undefined,
   priorFailures: ValidationFailure[],
 ): Promise<RenderedStory> {
-  const totalWordLimit = { 3: 60, 6: 120, 10: 200 }[intake.age_tier];
+  const totalWordLimit = { 3: 400, 6: 120, 10: 200 }[intake.age_tier];
+  const sentenceWordLimit = { 3: 12, 6: 12, 10: 18 }[intake.age_tier];
   const anchorRequirements = template.beats.flatMap((beat) => [
     `Beat ${beat.id} approved anchors:`,
     ...beat.must_convey.map((item) => {
@@ -121,25 +125,35 @@ async function repairWholeStory(
   const lineLimits = template.beats.map(
     (beat, index) => `Beat ${beat.id}: ${getBeatWordBudget(intake.age_tier, index)} words or fewer.`,
   );
+  const beatTruths = template.beats.flatMap((beat) => [
+    `Beat ${beat.id} clinical fact: ${beat.clinical_fact}`,
+    `Beat ${beat.id} sensory truth: ${beat.sensory_truth ?? "none"}`,
+  ]);
   const response = await client.chat.completions.create({
-    model: OPENROUTER_MODEL,
-    temperature: 0,
+    model: modelFor(intake),
     messages: [{
       role: "user",
       content: [
-        `Repair this seven-beat ${intake.language} voice story for ${intake.child_first_name}.`,
+        previousCandidate
+          ? `Repair this seven-beat ${intake.language} voice story for ${intake.child_first_name}.`
+          : `Write a seven-beat ${intake.language} voice story for ${intake.child_first_name}.`,
         `The seven returned narration lines together must use ${totalWordLimit} words or fewer while containing one approved anchor for every item below.`,
         ...lineLimits,
+        `No sentence may use more than ${sentenceWordLimit} words.`,
         intake.age_tier === 3
-          ? "For tier 3, include the child's name in beat 1 only."
+          ? "For tier 3, make the seven lines a connected read-aloud story: arriving, getting ready, the truthful pinch moment, choices, ending, and keepsake. Include the child's name in beat 1 only. Do not mention blood, veins, or how the procedure works."
           : "",
-        "Do not add, remove, or reorder a clinical beat. Keep the language warm and spoken, but use fewer words.",
+        `Selected concern: ${intake.concern_archetype}. Let it shape the spoken emphasis without adding a clinical fact.`,
+        "Every line must be a complete spoken sentence. Do not add, remove, or reorder a clinical beat. Do not promise that a sensation will not hurt.",
+        ...beatTruths,
         ...anchorRequirements,
-        "Validator failures to repair:",
-        ...priorFailures.map((failure) => `${failure.rule}: ${failure.detail} ${failure.suggested_line ?? ""}`),
-        "Existing candidate:",
-        JSON.stringify(previousCandidate.beats),
-        "Return only the repaired seven beats.",
+        ...(previousCandidate ? [
+          "Validator failures to repair:",
+          ...priorFailures.map((failure) => `${failure.rule}: ${failure.detail} ${failure.suggested_line ?? ""}`),
+          "Existing candidate:",
+          JSON.stringify(previousCandidate.beats),
+        ] : []),
+        "Return only the seven narration beats.",
       ].join("\n"),
     }],
     response_format: {
@@ -173,8 +187,8 @@ async function generateCandidate(
   const needsWholeStoryRepair = priorFailures.some((failure) =>
     failure.rule === "age_tier_total_words" || failure.rule === "age_tier_sentence_words",
   );
-  if (previousCandidate && needsWholeStoryRepair) {
-    return repairWholeStory(client, intake, template, previousCandidate, priorFailures);
+  if (intake.age_tier === 3 || previousCandidate && needsWholeStoryRepair) {
+    return renderWholeStory(client, intake, template, previousCandidate, priorFailures);
   }
   const repairIndexes = new Set(
     priorFailures
@@ -201,8 +215,7 @@ async function generateCandidate(
     if (previousBeat && !repairIndexes.has(index)) return previousBeat;
 
     const completion = await client.chat.completions.create({
-      model: OPENROUTER_MODEL,
-      temperature: 0,
+      model: modelFor(intake),
       messages: [{ role: "user", content: buildBeatPrompt(
         intake,
         template,
