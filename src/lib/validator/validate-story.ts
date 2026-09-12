@@ -133,6 +133,20 @@ function reassuranceFailures(story: StoryScript): ValidationFailure[] {
   });
 }
 
+function personalizationFailures(story: StoryScript): ValidationFailure[] {
+  if (story.language !== "en") return [];
+
+  const firstNarration = story.beats[0]?.narration ?? "";
+  return matches(story.language, firstNarration, story.child_first_name)
+    ? []
+    : [{
+        rule: "child_name",
+        beat: 1,
+        detail: "The first narration line must include the child's first name or nickname.",
+        suggested_line: `${story.child_first_name}, you are in the room with your care team.`,
+      }];
+}
+
 function ageTierFailures(story: StoryScript, totalWordNarration?: string): ValidationFailure[] {
   const narration = story.beats.map((beat) => beat.narration).join(" ");
   const allWords = words(totalWordNarration ?? narration);
@@ -188,6 +202,7 @@ export function validateStory(
   const failures = [
     ...reassuranceFailures(story),
     ...contentFailures(story),
+    ...personalizationFailures(story),
     ...structureFailures(story, template),
     ...validateCoverage(story, template),
     ...sensoryFailures(story, template),

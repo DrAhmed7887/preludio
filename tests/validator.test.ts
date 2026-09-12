@@ -11,7 +11,7 @@ const validStory: StoryScript = {
   language: "en",
   concern_archetype: "unfamiliar_room",
   beats: [
-    { index: 1, narration: "You are in the room. Mum is with you.", sensory_detail: "the chair is firm", child_action: null },
+    { index: 1, narration: "Sofia, you are in the room. Mum is with you.", sensory_detail: "the chair is firm", child_action: null },
     { index: 2, narration: "The tight band squeezes. It is not the needle.", sensory_detail: "tight squeeze, not sharp", child_action: null },
     { index: 3, narration: "A cold wipe feels wet. It is not the needle either.", sensory_detail: "cold and wet", child_action: null },
     { index: 4, narration: "It hurts briefly, like a quick tap. It is very quick.", sensory_detail: "a sharp pinch, then pressure", child_action: null },
@@ -60,6 +60,11 @@ const ruleNames = (story: StoryScript) => {
 describe("story validation", () => {
   it("accepts a template-aligned story", () => {
     expect(validateStory(validStory, bloodDrawTemplate)).toEqual({ ok: true });
+  });
+
+  it("requires the English narration to include the child's name in beat one", () => {
+    const unnamed = { ...validStory, beats: [{ ...validStory.beats[0], narration: "You are in the room. Mum is with you." }, ...validStory.beats.slice(1)] };
+    expect(ruleNames(unnamed)).toContain("child_name");
   });
 
   it("rejects false reassurance with a suggested line in English", () => {

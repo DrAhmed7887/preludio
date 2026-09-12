@@ -4,7 +4,7 @@ export const seededStories: Record<"en" | "es", StoryScript> = {
   en: storyScriptSchema.parse({
     child_first_name: "Sofia", procedure: "blood_draw", age_tier: 10, language: "en", concern_archetype: "unfamiliar_room",
     beats: [
-      { index: 1, narration: "You are in the chair. A nurse is here. The room is bright. Mum is with you. You can choose to look away or hold a hand.", sensory_detail: "the chair is firm; the room is bright", child_action: null },
+      { index: 1, narration: "Sofia, you are in the chair. A nurse is here. The room is bright. Mum is with you. You can choose to look away or hold a hand.", sensory_detail: "the chair is firm; the room is bright", child_action: null },
       { index: 2, narration: "A tight squeeze from the band squeezes your arm. It is not the needle yet, just a tight band. This will last about a minute.", sensory_detail: "tight squeeze, not sharp, lasts about a minute", child_action: null },
       { index: 3, narration: "The wipe feels cold and wet. It smells sharp and dries quickly. This wipe is not the needle either.", sensory_detail: "cold and wet, smells sharp, dries quickly", child_action: null },
       { index: 4, narration: "It may hurt briefly, like a pinch. You can expect a quick tap for 5 to 20 seconds. It feels like counting to five before you finish.", sensory_detail: "a sharp pinch, then pressure; roughly 5-20 seconds", child_action: null },

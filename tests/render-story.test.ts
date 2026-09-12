@@ -22,7 +22,7 @@ const intake: Intake = {
 
 const validCandidate: RenderedStory = {
   beats: [
-    { index: 1, narration: "You are in the room. Mum is with you.", child_action: null },
+    { index: 1, narration: "Sofia, you are in the room. Mum is with you.", child_action: null },
     { index: 2, narration: "The tight band squeezes. It is not the needle.", child_action: null },
     { index: 3, narration: "A cold wipe feels wet. It is not the needle either.", child_action: null },
     { index: 4, narration: "It hurts briefly, like a quick tap. It is very quick.", child_action: null },
