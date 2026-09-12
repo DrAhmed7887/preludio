@@ -44,6 +44,16 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .approval-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
 .approval-actions button { grid-column: auto; }
 .secondary-action { background: #eee9df; color: #26313c; }
+.delivery-preview { border-top: 1px solid #dcd4c7; display: grid; gap: .8rem; margin-top: 1.25rem; padding-top: 1.25rem; }
+.chat-thread { background: #e5ded1; border-radius: 1rem; display: grid; gap: .8rem; padding: 1rem; }
+.cover-card { background: #322866; border-radius: .9rem; color: #fff; display: grid; gap: .4rem; padding: 1.25rem; }
+.cover-card p { color: #d6cef8; font-size: .75rem; font-weight: 800; letter-spacing: .12em; }
+.cover-card h2 { font-size: 2rem; font-weight: 700; line-height: 1; }
+.cover-card span { color: #f0edff; }
+.chat-bubble { background: #fffdf8; border-radius: .85rem .85rem .85rem .15rem; display: grid; gap: .65rem; max-width: 92%; padding: .9rem; }
+.audio-bubble audio { max-width: 100%; width: 100%; }
+.transcript-bubble { justify-self: end; border-radius: .85rem .85rem .15rem .85rem; }
+.transcript-bubble p:not(.status-label) { line-height: 1.45; }
 
 @media (max-width: 38rem) {
   .intake-form { grid-template-columns: 1fr; }
