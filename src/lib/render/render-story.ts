@@ -10,9 +10,9 @@ import {
   storyScriptSchema,
 } from "../contracts";
 import { ValidationFailure, validateStory } from "../validator/validate-story";
-import { buildBeatPrompt } from "./prompt";
+import { buildBeatPrompt, getBeatWordBudget } from "./prompt";
 
-export const OPENROUTER_MODEL = "openai/gpt-4o-mini";
+export const OPENROUTER_MODEL = "openai/gpt-4.1-mini";
 export const MAX_RENDER_ATTEMPTS = 4;
 
 export type RenderResult =
@@ -23,6 +23,7 @@ export type CandidateGenerator = (
   intake: Intake,
   template: ProcedureTemplate,
   priorFailures: ValidationFailure[],
+  previousCandidate?: RenderedStory,
 ) => Promise<RenderedStory>;
 
 const modelBeatSchema = renderedBeatSchema.omit({ index: true });
@@ -38,6 +39,24 @@ function responseSchema() {
       properties: {
         narration: { type: "string" },
         child_action: { type: ["string", "null"] },
+      },
+    },
+  } as const;
+}
+
+function fullStoryResponseSchema() {
+  return {
+    name: "repaired_story",
+    strict: true,
+    schema: {
+      type: "object",
+      additionalProperties: false,
+      required: ["beats"],
+      properties: {
+        beats: {
+          type: "array",
+          items: responseSchema().schema,
+        },
       },
     },
   } as const;
@@ -63,10 +82,84 @@ function outputFailure(detail: string): RenderResult {
   };
 }
 
+function candidateFromBeats(
+  beats: unknown,
+  intake: Intake,
+  template: ProcedureTemplate,
+): RenderedStory {
+  if (!Array.isArray(beats) || beats.length !== template.beats.length) {
+    throw new Error("The provider returned an incomplete structured story.");
+  }
+
+  return renderedStorySchema.parse({
+    beats: beats.map((beat, index) => ({
+      index: template.beats[index]?.id,
+      ...modelBeatSchema.parse(beat),
+    })),
+    keepsake: {
+      headline: keepsakeHeadlines[intake.language],
+      one_true_thing: template.beats[0]?.sensory_truth?.split(";")[0] ?? "",
+    },
+  });
+}
+
+async function repairWholeStory(
+  client: OpenAI,
+  intake: Intake,
+  template: ProcedureTemplate,
+  previousCandidate: RenderedStory,
+  priorFailures: ValidationFailure[],
+): Promise<RenderedStory> {
+  const totalWordLimit = { 3: 60, 6: 120, 10: 200 }[intake.age_tier];
+  const anchorRequirements = template.beats.flatMap((beat) => [
+    `Beat ${beat.id} approved anchors:`,
+    ...beat.must_convey.map((item) => {
+      const options = template.coverage_anchors.items[item]?.[intake.language] ?? [];
+      return `${item}: ${options.map((option) => `“${option}”`).join(" OR ")}`;
+    }),
+  ]);
+  const lineLimits = template.beats.map(
+    (beat, index) => `Beat ${beat.id}: ${getBeatWordBudget(intake.age_tier, index)} words or fewer.`,
+  );
+  const response = await client.chat.completions.create({
+    model: OPENROUTER_MODEL,
+    temperature: 0,
+    messages: [{
+      role: "user",
+      content: [
+        `Repair this seven-beat ${intake.language} voice story for ${intake.child_first_name}.`,
+        `The seven returned narration lines together must use ${totalWordLimit} words or fewer while containing one approved anchor for every item below.`,
+        ...lineLimits,
+        intake.age_tier === 3
+          ? "For tier 3, include the child's name in beat 1 only."
+          : "",
+        "Do not add, remove, or reorder a clinical beat. Keep the language warm and spoken, but use fewer words.",
+        ...anchorRequirements,
+        "Validator failures to repair:",
+        ...priorFailures.map((failure) => `${failure.rule}: ${failure.detail} ${failure.suggested_line ?? ""}`),
+        "Existing candidate:",
+        JSON.stringify(previousCandidate.beats),
+        "Return only the repaired seven beats.",
+      ].join("\n"),
+    }],
+    response_format: {
+      type: "json_schema",
+      json_schema: fullStoryResponseSchema(),
+    },
+  });
+  const content = response.choices[0]?.message.content;
+  if (!content) {
+    throw new Error("The provider returned no structured story repair.");
+  }
+
+  return candidateFromBeats(JSON.parse(content).beats, intake, template);
+}
+
 async function generateCandidate(
   intake: Intake,
   template: ProcedureTemplate,
   priorFailures: ValidationFailure[],
+  previousCandidate?: RenderedStory,
 ): Promise<RenderedStory> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
@@ -77,11 +170,46 @@ async function generateCandidate(
     apiKey,
     baseURL: "https://openrouter.ai/api/v1",
   });
+  const needsWholeStoryRepair = priorFailures.some((failure) =>
+    failure.rule === "age_tier_total_words" || failure.rule === "age_tier_sentence_words",
+  );
+  if (previousCandidate && needsWholeStoryRepair) {
+    return repairWholeStory(client, intake, template, previousCandidate, priorFailures);
+  }
+  const repairIndexes = new Set(
+    priorFailures
+      .flatMap((failure) => failure.beat === null ? [] : [failure.beat - 1])
+      .filter((index) => index >= 0 && index < template.beats.length),
+  );
+  const needsTemplateRepair = priorFailures.some((failure) =>
+    failure.rule === "template_beat_structure",
+  );
+  const needsChoiceRepair = priorFailures.some(
+    (failure) => failure.rule === "age_tier_real_choice",
+  );
+  const needsNameRepair = priorFailures.some(
+    (failure) => failure.rule === "child_name",
+  );
+  if (needsTemplateRepair || !previousCandidate) {
+    template.beats.forEach((_, index) => repairIndexes.add(index));
+  }
+  if (needsChoiceRepair) repairIndexes.add(4);
+  if (needsNameRepair) repairIndexes.add(0);
+
   const beats = await Promise.all(template.beats.map(async (beat, index) => {
+    const previousBeat = previousCandidate?.beats[index];
+    if (previousBeat && !repairIndexes.has(index)) return previousBeat;
+
     const completion = await client.chat.completions.create({
       model: OPENROUTER_MODEL,
       temperature: 0,
-      messages: [{ role: "user", content: buildBeatPrompt(intake, template, index, priorFailures) }],
+      messages: [{ role: "user", content: buildBeatPrompt(
+        intake,
+        template,
+        index,
+        priorFailures,
+        previousBeat?.narration,
+      ) }],
       response_format: {
         type: "json_schema",
         json_schema: responseSchema(),
@@ -94,13 +222,10 @@ async function generateCandidate(
     return { index: beat.id, ...modelBeatSchema.parse(JSON.parse(content)) };
   }));
 
-  return renderedStorySchema.parse({
-    beats,
-    keepsake: {
-      headline: keepsakeHeadlines[intake.language],
-      one_true_thing: template.beats[0]?.sensory_truth?.split(";")[0] ?? "",
-    },
-  });
+  return candidateFromBeats(beats.map((beat) => ({
+    narration: beat.narration,
+    child_action: beat.child_action,
+  })), intake, template);
 }
 
 function combineStory(
@@ -124,16 +249,23 @@ export async function renderStory(
   generator: CandidateGenerator = generateCandidate,
 ): Promise<RenderResult> {
   let finalFailures: ValidationFailure[] | undefined;
+  let previousCandidate: RenderedStory | undefined;
 
   for (let attempt = 1; attempt <= MAX_RENDER_ATTEMPTS; attempt += 1) {
     try {
-      const candidate = await generator(input, template, finalFailures ?? []);
+      const candidate = await generator(
+        input,
+        template,
+        finalFailures ?? [],
+        previousCandidate,
+      );
       const story = combineStory(input, candidate, template);
       const validation = validateStory(story, template);
       if (validation.ok) {
         return { ok: true, story };
       }
       finalFailures = validation.failures;
+      previousCandidate = candidate;
     } catch (error) {
       const detail = error instanceof Error ? error.message : "The provider returned an unknown error.";
       return error instanceof SyntaxError || error instanceof Error && error.message.includes("structured")

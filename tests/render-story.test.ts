@@ -56,4 +56,31 @@ describe("structured rendering", () => {
       expect(failure).toMatchObject({ beat: 4, suggested_line: expect.any(String) });
     }
   });
+
+  it("repairs a failed candidate without replacing its passing beats", async () => {
+    const invalidCandidate: RenderedStory = {
+      ...validCandidate,
+      beats: validCandidate.beats.map((beat) =>
+        beat.index === 5 ? { ...beat, narration: "I promise you can look away or hold a hand." } : beat,
+      ),
+    };
+    const generator = vi.fn(async (
+      _input: Intake,
+      _template: typeof bloodDrawTemplate,
+      priorFailures: unknown[],
+      previousCandidate?: RenderedStory,
+    ) => {
+      if (!previousCandidate) return invalidCandidate;
+      expect(previousCandidate).toEqual(invalidCandidate);
+      expect(priorFailures).toEqual(expect.arrayContaining([
+        expect.objectContaining({ rule: "false_reassurance", beat: 5 }),
+      ]));
+      return validCandidate;
+    });
+
+    const result = await renderStory(intake, bloodDrawTemplate, generator);
+
+    expect(generator).toHaveBeenCalledTimes(2);
+    expect(result).toMatchObject({ ok: true, story: { child_first_name: "Sofia" } });
+  });
 });
