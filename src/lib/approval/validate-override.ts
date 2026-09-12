@@ -6,10 +6,11 @@ export function validateOverride(
   override: string,
   template: ProcedureTemplate,
 ): ValidationResult {
+  const totalWordNarration = story.beats.map((beat) => beat.narration).join(" ");
   return validateStory({
     ...story,
     beats: story.beats.map((beat, index) =>
       index === 0 ? { ...beat, narration: `${beat.narration} ${override}` } : beat,
     ),
-  }, template);
+  }, template, { totalWordNarration });
 }

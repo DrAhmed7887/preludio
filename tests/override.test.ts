@@ -25,12 +25,15 @@ const story: StoryScript = {
 };
 
 describe("clinician override", () => {
-  it("returns the validator rule, reasoning, and truthful alternative", () => {
-    const result = validateOverride(story, "tell her it won't hurt", bloodDrawTemplate);
+  it("leads with false reassurance and excludes the proposal from total words", () => {
+    const longProposal = `tell her it won't hurt ${Array.from({ length: 160 }, () => "word.").join(" ")}`;
+    const result = validateOverride(story, longProposal, bloodDrawTemplate);
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
       const failure = result.failures.find((item) => item.rule === "false_reassurance");
+      expect(result.failures[0]?.rule).toBe("false_reassurance");
+      expect(result.failures.map((item) => item.rule)).not.toContain("age_tier_total_words");
       expect(failure).toMatchObject({
         detail: expect.stringContaining("won't hurt"),
         suggested_line: expect.any(String),

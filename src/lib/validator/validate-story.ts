@@ -17,6 +17,10 @@ export type ValidationResult =
   | { ok: true }
   | { ok: false; failures: ValidationFailure[] };
 
+export type ValidationOptions = {
+  totalWordNarration?: string;
+};
+
 export const falseReassurancePhrases: Record<Language, readonly string[]> = {
   en: ["won't hurt", "will not hurt", "no pain", "painless", "you won't feel", "it's nothing", "don't be scared", "nothing to be afraid of", "big kids don't cry", "over before you know it", "i promise", "just a little scratch"],
   es: ["no te va a doler", "no dolerá", "sin dolor", "indoloro", "no lo sentirás", "no es nada", "no tengas miedo", "no hay nada que temer", "los niños grandes no lloran", "terminará antes de que te des cuenta", "te lo prometo", "solo un pequeño pinchazo", "no duele", "no va a doler", "no te dolerá", "solo es un pinchazo", "un pinchacito", "solo un poquito", "ya casi", "no pasa nada"],
@@ -129,9 +133,9 @@ function reassuranceFailures(story: StoryScript): ValidationFailure[] {
   });
 }
 
-function ageTierFailures(story: StoryScript): ValidationFailure[] {
+function ageTierFailures(story: StoryScript, totalWordNarration?: string): ValidationFailure[] {
   const narration = story.beats.map((beat) => beat.narration).join(" ");
-  const allWords = words(narration);
+  const allWords = words(totalWordNarration ?? narration);
   const limit = tierLimits[story.age_tier];
   const totalFailure = allWords.length > limit.totalWords
     ? [{ rule: "age_tier_total_words", beat: null, detail: `Tier ${story.age_tier} allows at most ${limit.totalWords} words.`, suggested_line: "Shorten the narration while retaining every required item." }]
@@ -176,14 +180,18 @@ function keepsakeFailures(story: StoryScript): ValidationFailure[] {
     : [{ rule: "keepsake_truth", beat: null, detail: "The keepsake's one true thing must appear in a sensory detail.", suggested_line: "Include the keepsake's one true thing in a sensory detail." }];
 }
 
-export function validateStory(story: StoryScript, template: ProcedureTemplate): ValidationResult {
+export function validateStory(
+  story: StoryScript,
+  template: ProcedureTemplate,
+  options: ValidationOptions = {},
+): ValidationResult {
   const failures = [
+    ...reassuranceFailures(story),
+    ...contentFailures(story),
     ...structureFailures(story, template),
     ...validateCoverage(story, template),
     ...sensoryFailures(story, template),
-    ...reassuranceFailures(story),
-    ...ageTierFailures(story),
-    ...contentFailures(story),
+    ...ageTierFailures(story, options.totalWordNarration),
     ...keepsakeFailures(story),
   ];
 
