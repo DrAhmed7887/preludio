@@ -24,6 +24,21 @@ const validStory: StoryScript = {
 
 const bloodDrawTemplate = procedureTemplateSchema.parse(template);
 
+const arabicNormalisedStory: StoryScript = {
+  ...validStory,
+  language: "ar",
+  beats: [
+    { index: 1, narration: "فِي الغرفـة ومن معك.", sensory_detail: "الكرسي ثابت", child_action: null },
+    { index: 2, narration: "يضغط وليست الإبرة.", sensory_detail: "شد محكم", child_action: null },
+    { index: 3, narration: "بارد ومبلل ولسه مش الإبرة.", sensory_detail: "بارد ومبلل", child_action: null },
+    { index: 4, narration: "سيوجع قليلًا مثل عد خمسة من 5 إلى 20 ثانية.", sensory_detail: "وخزة حادة ثم ضغط", child_action: null },
+    { index: 5, narration: "يمكنك أن تختار النظر بعيدًا.", sensory_detail: null, child_action: "النظر بعيدًا" },
+    { index: 6, narration: "انتهى الأمر واستغرق بضع ثوان.", sensory_detail: "ضغط ثم لصقة صغيرة", child_action: null },
+    { index: 7, narration: "بطاقة.", sensory_detail: null, child_action: null },
+  ],
+  keepsake: { headline: "بطاقتك", one_true_thing: "الكرسي ثابت" },
+};
+
 const withNarration = (story: StoryScript, narration: string): StoryScript => ({
   ...story,
   beats: story.beats.map((beat, index) => ({
@@ -64,6 +79,18 @@ describe("story validation", () => {
     expect(ruleNames(arabic)).toContain("false_reassurance");
   });
 
+  it("rejects Spanish diminutives and Egyptian colloquial reassurance", () => {
+    const spanish = { ...validStory, language: "es" as const, beats: [{ ...validStory.beats[0], narration: "Un pinchacito." }, ...validStory.beats.slice(1)] };
+    const egyptianArabic = { ...validStory, language: "ar" as const, beats: [{ ...validStory.beats[0], narration: "مش هيوجعك." }, ...validStory.beats.slice(1)] };
+    expect(ruleNames(spanish)).toContain("false_reassurance");
+    expect(ruleNames(egyptianArabic)).toContain("false_reassurance");
+  });
+
+  it("passes Arabic coverage that requires normalisation", () => {
+    expect("فِي الغرفـة".includes("في الغرفة")).toBe(false);
+    expect(validateStory(arabicNormalisedStory, bloodDrawTemplate)).toEqual({ ok: true });
+  });
+
   it("rejects missing template coverage and beat structural changes", () => {
     expect(ruleNames({ ...validStory, beats: [{ ...validStory.beats[0], narration: "where you are." }, ...validStory.beats.slice(1)] })).toContain("must_convey_coverage");
     expect(ruleNames({ ...validStory, beats: validStory.beats.slice(1) })).toContain("template_beat_structure");
@@ -76,10 +103,10 @@ describe("story validation", () => {
       templateBeat.must_convey.forEach((item) => {
         const beats = validStory.beats.map((beat, beatIndex) =>
           beatIndex === index
-            ? { ...beat, narration: beat.narration.replace(item, "") }
+            ? { ...beat, narration: "Content removed." }
             : beat,
         );
-        expect(ruleNames({ ...validStory, beats })).toContain("must_convey_coverage");
+        expect(ruleNames({ ...validStory, beats }), item).toContain("must_convey_coverage");
       });
     });
   });

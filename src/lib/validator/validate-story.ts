@@ -17,20 +17,11 @@ export type ValidationResult =
   | { ok: true }
   | { ok: false; failures: ValidationFailure[] };
 
-export const falseReassurancePhrases = [
-  { en: "won't hurt", es: "no te va a doler", ar: "لن يؤلمك" },
-  { en: "will not hurt", es: "no dolerá", ar: "لن يؤلم" },
-  { en: "no pain", es: "sin dolor", ar: "لا ألم" },
-  { en: "painless", es: "indoloro", ar: "غير مؤلم" },
-  { en: "you won't feel", es: "no lo sentirás", ar: "لن تشعر" },
-  { en: "it's nothing", es: "no es nada", ar: "هذا لا شيء" },
-  { en: "don't be scared", es: "no tengas miedo", ar: "لا تخف" },
-  { en: "nothing to be afraid of", es: "no hay nada que temer", ar: "لا يوجد ما تخاف منه" },
-  { en: "big kids don't cry", es: "los niños grandes no lloran", ar: "الأطفال الكبار لا يبكون" },
-  { en: "over before you know it", es: "terminará antes de que te des cuenta", ar: "سينتهي قبل أن تدرك" },
-  { en: "i promise", es: "te lo prometo", ar: "أعدك" },
-  { en: "just a little scratch", es: "solo un pequeño pinchazo", ar: "مجرد وخزة صغيرة" },
-] as const;
+export const falseReassurancePhrases: Record<Language, readonly string[]> = {
+  en: ["won't hurt", "will not hurt", "no pain", "painless", "you won't feel", "it's nothing", "don't be scared", "nothing to be afraid of", "big kids don't cry", "over before you know it", "i promise", "just a little scratch"],
+  es: ["no te va a doler", "no dolerá", "sin dolor", "indoloro", "no lo sentirás", "no es nada", "no tengas miedo", "no hay nada que temer", "los niños grandes no lloran", "terminará antes de que te des cuenta", "te lo prometo", "solo un pequeño pinchazo", "no duele", "no va a doler", "no te dolerá", "solo es un pinchazo", "un pinchacito", "solo un poquito", "ya casi", "no pasa nada"],
+  ar: ["لن يؤلمك", "لن يؤلم", "لا ألم", "غير مؤلم", "لن تشعر", "هذا لا شيء", "لا تخف", "لا يوجد ما تخاف منه", "الأطفال الكبار لا يبكون", "سينتهي قبل أن تدرك", "أعدك", "مجرد وخزة صغيرة", "مش هيوجع", "مش هيوجعك", "مش هتحس", "ما تخافش", "مش حاجة", "خلاص هيخلص"],
+};
 
 const alternatives: Record<Language, string> = {
   en: "You may feel some new sensations; your care team will be there with you.",
@@ -55,7 +46,20 @@ const prohibitedContent = [
 
 const words = (text: string) => text.trim().split(/\s+/u).filter(Boolean);
 const sentences = (text: string) => text.split(/[.!?؟]+/u).filter((sentence) => sentence.trim());
-const includes = (text: string, phrase: string) => text.toLocaleLowerCase().includes(phrase.toLocaleLowerCase());
+
+export function normalizeArabic(text: string): string {
+  return text
+    .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/gu, "")
+    .replace(/ـ/gu, "")
+    .replace(/[أإآ]/gu, "ا")
+    .replace(/ة/gu, "ه")
+    .replace(/ى/gu, "ي");
+}
+
+const normaliseForMatching = (language: Language, text: string) =>
+  language === "ar" ? normalizeArabic(text) : text.toLocaleLowerCase();
+const matches = (language: Language, text: string, phrase: string) =>
+  normaliseForMatching(language, text).includes(normaliseForMatching(language, phrase));
 
 const choicePatterns: Record<Language, RegExp> = {
   en: /\b(?:you can choose|you may choose|choose whether)\b/i,
@@ -77,7 +81,8 @@ function coverageFailures(story: StoryScript, template: ProcedureTemplate): Vali
   return template.beats.flatMap((templateBeat, index) => {
     const narration = story.beats[index]?.narration ?? "";
     return templateBeat.must_convey
-      .filter((item) => !includes(narration, item))
+      .filter((item) => !template.coverage_anchors.items[item]?.[story.language]
+        .some((anchor) => matches(story.language, narration, anchor)))
       .map((item) => ({
         rule: "must_convey_coverage",
         beat: templateBeat.id,
@@ -109,10 +114,10 @@ function sensoryFailures(story: StoryScript, template: ProcedureTemplate): Valid
 }
 
 function reassuranceFailures(story: StoryScript): ValidationFailure[] {
-  const phrases = falseReassurancePhrases.map((phrase) => phrase[story.language]);
+  const phrases = falseReassurancePhrases[story.language];
 
   return story.beats.flatMap((beat) => {
-    const match = phrases.find((phrase) => includes(beat.narration, phrase));
+    const match = phrases.find((phrase) => matches(story.language, beat.narration, phrase));
     return match
       ? [{
           rule: "false_reassurance",
@@ -138,7 +143,7 @@ function ageTierFailures(story: StoryScript): ValidationFailure[] {
         /\p{N}/u.test(narration)
           ? { rule: "age_tier_numbers", beat: null, detail: "Tier 3 narration cannot include numbers.", suggested_line: "Use words without numbers for this tier." }
           : null,
-        mechanismTerms.some((term) => includes(narration, term))
+        mechanismTerms.some((term) => matches(story.language, narration, term))
           ? { rule: "age_tier_mechanism", beat: null, detail: "Tier 3 narration cannot include a mechanism explanation.", suggested_line: "Use a concrete sensory description instead." }
           : null,
       ];
@@ -164,7 +169,7 @@ function contentFailures(story: StoryScript): ValidationFailure[] {
 function keepsakeFailures(story: StoryScript): ValidationFailure[] {
   const oneTrueThing = story.keepsake.one_true_thing.trim();
   const inSensoryDetail = oneTrueThing.length > 0 && story.beats.some(
-    (beat) => includes(beat.sensory_detail ?? "", oneTrueThing),
+    (beat) => matches(story.language, beat.sensory_detail ?? "", oneTrueThing),
   );
   return inSensoryDetail
     ? []
