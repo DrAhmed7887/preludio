@@ -20,3 +20,16 @@ body {
 h1 { max-width: 38rem; font-size: clamp(2.8rem, 8vw, 5.5rem); font-weight: 600; letter-spacing: -.06em; line-height: .95; }
 .intro { max-width: 34rem; color: #485565; font-size: 1.2rem; line-height: 1.6; }
 .status-card { max-width: 34rem; border: 1px solid #dcd4c7; border-radius: 1rem; background: #fffdf8; padding: 1.25rem; }
+.intake-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; max-width: 42rem; }
+.field { display: grid; gap: .4rem; }
+.field-wide { grid-column: 1 / -1; }
+label { color: #2d3540; font-size: .9rem; font-weight: 700; }
+input, select { width: 100%; border: 1px solid #bdb5a8; border-radius: .6rem; background: #fffdf8; color: var(--foreground); font: inherit; padding: .75rem; }
+.field-help { color: #596675; font-size: .86rem; line-height: 1.45; }
+button { justify-self: start; grid-column: 1 / -1; border: 0; border-radius: .6rem; background: #322866; color: #fff; cursor: pointer; font: inherit; font-weight: 700; padding: .75rem 1rem; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #b9a8ee; outline-offset: 2px; }
+
+@media (max-width: 38rem) {
+  .intake-form { grid-template-columns: 1fr; }
+  .field-wide, button { grid-column: auto; }
+}
