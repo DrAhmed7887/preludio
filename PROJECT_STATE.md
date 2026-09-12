@@ -2,10 +2,11 @@
 
 ## Current slice
 
-Slice 6 — seeded delivery. The app has instant English and Spanish tier-10 seed
-stories that were accepted by the deterministic validator, plus an in-app WhatsApp
-sandbox preview with cover text, narration audio, and transcript. The final demo
-send uses the English seed through the same clinician-approval flow.
+Final freeze — seeded delivery and parent view. The app has instant English and
+Spanish tier-10 seed stories accepted by the deterministic validator, plus an
+in-app WhatsApp sandbox preview with cover text, narration audio, and transcript.
+Approved stories also have a read-and-listen parent link with an opaque identifier
+and a 24-hour expiry.
 
 ## Decisions
 
@@ -27,10 +28,10 @@ send uses the English seed through the same clinician-approval flow.
 - Rendering now makes four validated attempts. Retry prompts name each missed
   must-convey item and show its exact localized anchors.
 - For the demonstration, Cloud Run is pinned to one warm instance and narration
-  media remains in memory for the active session. The send begins immediately after
-  approval. Production deployment would use object storage for durable public media.
+  media remains in memory for the active session. Production deployment would use
+  object storage for durable public media.
 
 ## Next work
 
-Deploy the seeded-delivery revision once with its runtime configuration, then load,
-approve, synthesize, and send the English seed without another revision in between.
+No further product changes are planned. The Twilio route remains in place for later
+use, while the in-app preview is the delivery surface for the current demonstration.
