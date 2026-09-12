@@ -2,7 +2,7 @@ import templateJson from "../../../../../../procedures/blood_draw.json";
 import { NextResponse } from "next/server";
 
 import { procedureTemplateSchema } from "@/lib/contracts";
-import { getAudio, getStory, storeAudio } from "@/lib/story-store";
+import { getAudio, getStory, isStoryApproved, storeAudio } from "@/lib/story-store";
 import { synthesizeStory } from "@/lib/tts/synthesize-story";
 import { validateStory } from "@/lib/validator/validate-story";
 
@@ -15,6 +15,9 @@ export async function POST(_request: Request, context: RouteContext) {
   const story = getStory(storyId);
   if (!story) {
     return NextResponse.json({ reason: "story_not_found" }, { status: 404 });
+  }
+  if (!isStoryApproved(storyId)) {
+    return NextResponse.json({ reason: "approval_required" }, { status: 403 });
   }
 
   const validation = validateStory(story, template);

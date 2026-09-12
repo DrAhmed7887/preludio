@@ -2,6 +2,7 @@ import { StoryScript } from "./contracts";
 
 const stories = new Map<string, StoryScript>();
 const audioByStoryId = new Map<string, Uint8Array>();
+const approvedStoryIds = new Set<string>();
 
 export function storeStory(story: StoryScript): string {
   const storyId = crypto.randomUUID();
@@ -19,4 +20,12 @@ export function storeAudio(storyId: string, audio: Uint8Array): void {
 
 export function getAudio(storyId: string): Uint8Array | undefined {
   return audioByStoryId.get(storyId);
+}
+
+export function approveStory(storyId: string): void {
+  approvedStoryIds.add(storyId);
+}
+
+export function isStoryApproved(storyId: string): boolean {
+  return approvedStoryIds.has(storyId);
 }

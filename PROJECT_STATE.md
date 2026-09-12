@@ -2,9 +2,9 @@
 
 ## Current slice
 
-Slice 4 — narration audio. A validated story is checked again before it reaches the
-OpenRouter speech endpoint. The resulting MP3 is held in memory and served from a
-same-origin route to the browser listening surface.
+Slice 5 — approval and refusal. A clinician can check a free-text wording override
+through the same validator that checks narration. The clinician must approve a valid
+story before the audio route will create or serve narration audio.
 
 ## Decisions
 
@@ -19,8 +19,12 @@ same-origin route to the browser listening surface.
 - Speech model: `mistralai/voxtral-mini-tts-2603` through OpenRouter, using its
   available English neutral voice. A live English tier-10 MP3 was generated and
   fetched from the app route with an `audio/mpeg` content type.
+- The refusal surface returns `false_reassurance`, plain-language reasoning, and a
+  validator-supplied truthful alternative for “tell her it won't hurt”.
+- English tier 6 is deferred from the demo after a live refusal on beat-4 coverage
+  and a non-simple number. It did not reach the tier-3 total-word rule.
 
 ## Next work
 
-Slice 5 adds the clinician approval gate and the visible refusal response. Audio
-and delivery remain downstream of that gate.
+Slice 6 adds a WhatsApp-style preview, then the live sandbox delivery path. Both
+remain downstream of clinician approval.
