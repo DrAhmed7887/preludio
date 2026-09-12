@@ -3,13 +3,18 @@ import type { ValidationFailure } from "../validator/validate-story";
 
 const sentenceLimits = { 3: 8, 6: 12, 10: 18 } as const;
 const beatWordBudgets = {
-  3: [7, 6, 6, 7, 3, 6, 4],
+  3: [10, 8, 9, 11, 5, 8, 5],
   6: [16, 16, 16, 22, 16, 16, 12],
   10: [26, 26, 26, 30, 26, 26, 22],
 } as const;
 
-function voiceDirection(intake: Intake): string {
+function voiceDirection(intake: Intake, beatId: number): string {
   if (intake.language !== "en") return "";
+  if (intake.age_tier === 3) {
+    return beatId === 1
+      ? `Write in warm, spoken English as a kind adult sharing a short voice story with ${intake.child_first_name}. Use the name in this opening only.`
+      : "Write in warm, spoken English with short, natural phrases. Do not repeat the child's name outside the opening.";
+  }
 
   return [
     `Write in warm, spoken English, as a kind adult sharing a short voice story with ${intake.child_first_name}, not a clinical list.`,
@@ -30,6 +35,7 @@ export function buildBeatPrompt(
   template: ProcedureTemplate,
   beatIndex: number,
   priorFailures: ValidationFailure[] = [],
+  previousNarration?: string,
 ): string {
   const beat = template.beats[beatIndex];
   if (!beat) {
@@ -68,7 +74,13 @@ export function buildBeatPrompt(
     `Sensory truth: ${beat.sensory_truth ?? "none"}`,
     "The validator accepts only the exact substrings below. Weave one complete option for every required item into natural spoken narration; do not paraphrase it. Before returning, check that narration contains one option from every line.",
     ...anchors,
-    voiceDirection(intake),
+    voiceDirection(intake, beat.id),
+    previousNarration
+      ? `Previous narration to repair: “${previousNarration}”`
+      : "",
+    previousNarration
+      ? "Rewrite that narration to resolve every retry failure while retaining the required content for this beat."
+      : "",
     "Every required phrase must be in narration; child_action is not checked for coverage.",
     "Set child_action to null.",
     intake.age_tier === 3
