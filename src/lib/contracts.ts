@@ -46,7 +46,7 @@ export const procedureTemplateSchema = z.object({
 export const beatSchema = z.object({
   index: z.number().int().positive(),
   narration: z.string().min(1),
-  sensory_detail: z.string().min(1),
+  sensory_detail: z.string().min(1).nullable(),
   child_action: z.string().min(1).nullable(),
 });
 
