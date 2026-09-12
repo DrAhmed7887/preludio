@@ -11,9 +11,14 @@ type RouteContext = { params: Promise<{ storyId: string }> };
 function twilioSettings() {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const apiKeySid = process.env.TWILIO_API_KEY_SID;
+  const apiKeySecret = process.env.TWILIO_API_KEY_SECRET;
   const from = process.env.TWILIO_WHATSAPP_FROM;
   const to = process.env.TWILIO_WHATSAPP_TO;
-  return accountSid && authToken && from && to ? { accountSid, authToken, from, to } : null;
+  if (!accountSid || !from || !to) return null;
+  if (apiKeySid && apiKeySecret) return { accountSid, credentialSid: apiKeySid, credentialSecret: apiKeySecret, from, to };
+  if (authToken) return { accountSid, credentialSid: accountSid, credentialSecret: authToken, from, to };
+  return null;
 }
 
 export async function POST(request: Request, context: RouteContext) {
@@ -36,7 +41,7 @@ export async function POST(request: Request, context: RouteContext) {
     MediaUrl: audioUrl,
     To: settings.to,
   });
-  const credentials = Buffer.from(`${settings.accountSid}:${settings.authToken}`).toString("base64");
+  const credentials = Buffer.from(`${settings.credentialSid}:${settings.credentialSecret}`).toString("base64");
   const response = await fetch(
     `https://api.twilio.com/2010-04-01/Accounts/${settings.accountSid}/Messages.json`,
     { method: "POST", headers: { Authorization: `Basic ${credentials}`, "Content-Type": "application/x-www-form-urlencoded" }, body },
