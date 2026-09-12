@@ -27,6 +27,9 @@ label { color: #2d3540; font-size: .9rem; font-weight: 700; }
 input, select { width: 100%; border: 1px solid #bdb5a8; border-radius: .6rem; background: #fffdf8; color: var(--foreground); font: inherit; padding: .75rem; }
 textarea { min-height: 6rem; resize: vertical; width: 100%; border: 1px solid #bdb5a8; border-radius: .6rem; background: #fffdf8; color: var(--foreground); font: inherit; padding: .75rem; }
 .field-help { color: #596675; font-size: .86rem; line-height: 1.45; }
+.seed-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; }
+.seed-actions button { grid-column: auto; }
+.seed-status { background: #eaf4eb; border-radius: .6rem; color: #1e5732; font-weight: 700; padding: .7rem .85rem; }
 button { justify-self: start; grid-column: 1 / -1; border: 0; border-radius: .6rem; background: #322866; color: #fff; cursor: pointer; font: inherit; font-weight: 700; padding: .75rem 1rem; }
 button:disabled { cursor: wait; opacity: .7; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #b9a8ee; outline-offset: 2px; }
