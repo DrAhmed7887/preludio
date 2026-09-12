@@ -38,8 +38,18 @@ export const procedureBeatSchema = z.object({
   must_convey: z.array(z.string().min(1)).min(1),
 });
 
+export const coverageAnchorSchema = z.object({
+  en: z.array(z.string().min(1)).min(2).max(4),
+  es: z.array(z.string().min(1)).min(2).max(4),
+  ar: z.array(z.string().min(1)).min(2).max(4),
+});
+
 export const procedureTemplateSchema = z.object({
   procedure_id: procedureSchema,
+  coverage_anchors: z.object({
+    matching_note: z.string().min(1),
+    items: z.record(z.string(), coverageAnchorSchema),
+  }),
   beats: z.array(procedureBeatSchema).length(7),
 });
 

@@ -1,5 +1,80 @@
 {
   "procedure_id": "blood_draw",
+  "coverage_anchors": {
+    "matching_note": "Matching implementation detail. These clinician-approved localized anchors support deterministic substring checks and do not alter clinical content.",
+    "items": {
+      "where you are": {
+        "en": ["where you are", "in the room"],
+        "es": ["dónde estás", "en la sala"],
+        "ar": ["أين أنت", "في الغرفة"]
+      },
+      "who is with you": {
+        "en": ["who is with you", "nurse and parent"],
+        "es": ["quién está contigo", "una enfermera y un familiar"],
+        "ar": ["من معك", "ممرضة ووالد"]
+      },
+      "it squeezes": {
+        "en": ["it squeezes", "tight squeeze"],
+        "es": ["aprieta", "te aprieta"],
+        "ar": ["يضغط", "شد"]
+      },
+      "it is not the needle": {
+        "en": ["it is not the needle", "not the needle"],
+        "es": ["no es la aguja", "todavía no es la aguja"],
+        "ar": ["ليست الإبرة", "مش الإبرة"]
+      },
+      "cold": {
+        "en": ["cold", "cool"],
+        "es": ["frío", "fría"],
+        "ar": ["بارد", "باردة"]
+      },
+      "wet": {
+        "en": ["wet", "damp"],
+        "es": ["mojado", "húmedo"],
+        "ar": ["مبلل", "رطب"]
+      },
+      "this is not the needle either": {
+        "en": ["this is not the needle either", "not the needle either"],
+        "es": ["tampoco es la aguja", "no es la aguja tampoco"],
+        "ar": ["ليست الإبرة أيضًا", "لسه مش الإبرة"]
+      },
+      "it will hurt briefly": {
+        "en": ["it will hurt briefly", "brief hurt"],
+        "es": ["dolerá un momento", "dolor breve"],
+        "ar": ["سيوجع قليلًا", "ألم قصير"]
+      },
+      "honest comparator": {
+        "en": ["honest comparator", "like counting to five"],
+        "es": ["como contar hasta cinco", "como un pellizco"],
+        "ar": ["مثل عد خمسة", "مثل قرصة"]
+      },
+      "how long": {
+        "en": ["how long", "5 to 20 seconds"],
+        "es": ["5 a 20 segundos", "unos segundos"],
+        "ar": ["من 5 إلى 20 ثانية", "بضع ثوان"]
+      },
+      "what you are allowed to do": {
+        "en": ["what you are allowed to do", "you can choose"],
+        "es": ["puedes mirar a otro lado", "puedes respirar"],
+        "ar": ["يمكنك أن تختار النظر بعيدًا", "يمكنك التنفس"]
+      },
+      "it is over": {
+        "en": ["it is over", "it is finished"],
+        "es": ["ya terminó", "se acabó"],
+        "ar": ["انتهى الأمر", "خلص"]
+      },
+      "how long it took": {
+        "en": ["how long it took", "took a few seconds"],
+        "es": ["duró unos segundos", "tomó unos segundos"],
+        "ar": ["استغرق بضع ثوان", "أخذ بضع ثوان"]
+      },
+      "what you keep": {
+        "en": ["what you keep", "a card or sticker"],
+        "es": ["una tarjeta", "una pegatina"],
+        "ar": ["بطاقة", "ملصق"]
+      }
+    }
+  },
   "beats": [
     {
       "id": 1,

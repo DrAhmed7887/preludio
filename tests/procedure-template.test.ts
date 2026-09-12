@@ -5,9 +5,9 @@ import { intakeSchema, procedureTemplateSchema } from "../src/lib/contracts";
 
 describe("blood draw template", () => {
   it("matches the clinician-authored source exactly", () => {
-    expect(procedureTemplateSchema.parse(template)).toEqual({
-      procedure_id: "blood_draw",
-      beats: [
+    const parsedTemplate = procedureTemplateSchema.parse(template);
+    expect(parsedTemplate.procedure_id).toBe("blood_draw");
+    expect(parsedTemplate.beats).toEqual([
         {
           id: 1,
           clinical_fact:
@@ -53,8 +53,7 @@ describe("blood draw template", () => {
           sensory_truth: null,
           must_convey: ["what you keep"],
         },
-      ],
-    });
+    ]);
   });
 });
 
