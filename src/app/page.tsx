@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import {
   ConcernArchetype,
   Intake,
+  StoryScript,
   concernArchetypeSchema,
   intakeSchema,
 } from "@/lib/contracts";
@@ -31,16 +32,42 @@ const initialIntake: Intake = {
 export default function Home() {
   const [intake, setIntake] = useState<Intake>(initialIntake);
   const [formMessage, setFormMessage] = useState("");
+  const [failures, setFailures] = useState<Array<{ rule: string; beat: number | null; detail: string; suggested_line?: string }>>([]);
+  const [isRendering, setIsRendering] = useState(false);
+  const [story, setStory] = useState<StoryScript | null>(null);
 
-  function submitIntake(event: FormEvent<HTMLFormElement>) {
+  async function submitIntake(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const result = intakeSchema.safeParse(intake);
+    if (!result.success) {
+      setFormMessage(result.error.issues[0]?.message ?? "Check the intake values.");
+      return;
+    }
 
-    setFormMessage(
-      result.success
-        ? "The intake is ready for rendering in Slice 3."
-        : result.error.issues[0]?.message ?? "Check the intake values.",
-    );
+    setFailures([]);
+    setIsRendering(true);
+    setStory(null);
+    setFormMessage("Rendering the narration from the approved template.");
+
+    try {
+      const response = await fetch("/api/stories/render", {
+        body: JSON.stringify(result.data),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+      const payload = await response.json();
+      if (response.ok) {
+        setStory(payload.story as StoryScript);
+        setFormMessage("Validated narration ready for clinician review.");
+      } else {
+        setFailures(payload.failures ?? []);
+        setFormMessage(payload.detail ?? "Rendering did not produce a validated story.");
+      }
+    } catch {
+      setFormMessage("The rendering request could not be completed.");
+    } finally {
+      setIsRendering(false);
+    }
   }
 
   return (
@@ -140,13 +167,40 @@ export default function Home() {
           </select>
         </div>
 
-        <button type="submit">Check intake</button>
+        <button disabled={isRendering} type="submit">
+          {isRendering ? "Rendering narration…" : "Render narration"}
+        </button>
       </form>
 
       <section aria-live="polite" className="status-card">
         <p className="status-label">Intake status</p>
         <p>{formMessage || "Choose the clinical parameters and add the child&apos;s label."}</p>
       </section>
+
+      {failures.length > 0 && (
+        <section aria-live="polite" className="failure-card">
+          <p className="status-label">Validation result</p>
+          {failures.map((failure) => (
+            <article key={`${failure.rule}-${failure.beat}`}>
+              <p><strong>{failure.rule}</strong>{failure.beat ? ` · beat ${failure.beat}` : ""}</p>
+              <p>{failure.detail}</p>
+              {failure.suggested_line && <p>Alternative: {failure.suggested_line}</p>}
+            </article>
+          ))}
+        </section>
+      )}
+
+      {story && (
+        <section className="story-output">
+          <p className="status-label">Validated narration</p>
+          {story.beats.map((beat) => (
+            <article className="narration-card" key={beat.index}>
+              <p className="beat-index">Beat {beat.index}</p>
+              <p>{beat.narration}</p>
+            </article>
+          ))}
+        </section>
+      )}
     </main>
   );
 }

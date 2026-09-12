@@ -27,7 +27,14 @@ label { color: #2d3540; font-size: .9rem; font-weight: 700; }
 input, select { width: 100%; border: 1px solid #bdb5a8; border-radius: .6rem; background: #fffdf8; color: var(--foreground); font: inherit; padding: .75rem; }
 .field-help { color: #596675; font-size: .86rem; line-height: 1.45; }
 button { justify-self: start; grid-column: 1 / -1; border: 0; border-radius: .6rem; background: #322866; color: #fff; cursor: pointer; font: inherit; font-weight: 700; padding: .75rem 1rem; }
+button:disabled { cursor: wait; opacity: .7; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #b9a8ee; outline-offset: 2px; }
+.failure-card, .story-output { display: grid; gap: .8rem; max-width: 42rem; }
+.failure-card { border: 1px solid #c47a68; border-radius: 1rem; background: #fff8f4; padding: 1.25rem; }
+.failure-card article { display: grid; gap: .25rem; }
+.story-output { margin-top: .5rem; }
+.narration-card { border: 1px solid #dcd4c7; border-radius: .9rem; background: #fffdf8; font-size: 1.08rem; line-height: 1.55; padding: 1.15rem; }
+.beat-index { color: #5c4b93; font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 
 @media (max-width: 38rem) {
   .intake-form { grid-template-columns: 1fr; }

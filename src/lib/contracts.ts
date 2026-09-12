@@ -68,7 +68,22 @@ export const storyScriptSchema = intakeSchema.extend({
   }),
 });
 
+export const renderedBeatSchema = z.object({
+  index: z.number().int().positive(),
+  narration: z.string().min(1),
+  child_action: z.string().min(1).nullable(),
+});
+
+export const renderedStorySchema = z.object({
+  beats: z.array(renderedBeatSchema).length(7),
+  keepsake: z.object({
+    headline: z.string().min(1),
+    one_true_thing: z.string().min(1),
+  }),
+});
+
 export type Intake = z.infer<typeof intakeSchema>;
 export type ConcernArchetype = z.infer<typeof concernArchetypeSchema>;
 export type ProcedureTemplate = z.infer<typeof procedureTemplateSchema>;
 export type StoryScript = z.infer<typeof storyScriptSchema>;
+export type RenderedStory = z.infer<typeof renderedStorySchema>;

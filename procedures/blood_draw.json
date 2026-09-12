@@ -25,21 +25,21 @@
       },
       "cold": {
         "en": ["feels cold", "cold wipe"],
-        "es": ["se siente fría", "toallita fría"],
+        "es": ["se siente fría", "toallita fría", "fría"],
         "ar": ["تشعر بالبرودة", "منديل بارد"]
       },
       "wet": {
-        "en": ["feels wet", "wet wipe"],
-        "es": ["se siente mojada", "toallita mojada"],
+        "en": ["feels wet", "wet wipe", "wet", "damp"],
+        "es": ["se siente mojada", "toallita mojada", "húmeda"],
         "ar": ["تشعر بالبلل", "مبلل", "البلل"]
       },
       "this is not the needle either": {
-        "en": ["wipe is not the needle either", "not the needle either"],
+        "en": ["wipe is not the needle either", "not the needle either", "wipe isn't the needle", "not the needle"],
         "es": ["la toallita tampoco es la aguja", "tampoco es la aguja"],
         "ar": ["المنديل ليس الإبرة أيضًا", "لسه مش الإبرة"]
       },
       "it will hurt briefly": {
-        "en": ["hurts briefly", "can hurt for a moment"],
+        "en": ["hurts briefly", "can hurt for a moment", "may hurt", "a quick pinch", "a brief sting"],
         "es": ["puede doler un momento", "duele un momento"],
         "ar": ["توجع لحظة", "قد توجع قليلًا"]
       },
@@ -54,7 +54,7 @@
         "ar": ["من 5 إلى 20 ثانية", "بضع ثوان"]
       },
       "what you are allowed to do": {
-        "en": ["look away", "hold a hand", "breathe out", "you can choose"],
+        "en": ["look away", "turn away", "hold a hand", "squeeze a hand", "breathe out", "take a breath"],
         "es": ["puedes mirar a otro lado", "puedes elegir mirar a otro lado", "puedes tomar una mano", "puedes respirar"],
         "ar": ["يمكنك النظر بعيدًا", "يمكنك مسك يد", "يمكنك أن تختار النظر بعيدًا", "يمكنك التنفس"]
       },
@@ -69,8 +69,8 @@
         "ar": ["استغرق بضع ثوان", "أخذ بضع ثوان", "قبل أن تنتهي من العد"]
       },
       "what you keep": {
-        "en": ["keep a card", "keep a sticker", "card for you"],
-        "es": ["quedarte con una tarjeta", "quedarte con una pegatina", "una tarjeta para ti"],
+        "en": ["keep a card", "keep a sticker", "card for you", "sticker for you", "take home a sticker", "you get a card"],
+        "es": ["quedarte con una tarjeta", "quedarte con una pegatina", "una tarjeta para ti", "recibes una pegatina", "tienes una pegatina", "te dan una pegatina"],
         "ar": ["تحتفظ ببطاقة", "تحتفظ بملصق", "بطاقة لك"]
       }
     }

@@ -62,7 +62,7 @@ const matches = (language: Language, text: string, phrase: string) =>
   normaliseForMatching(language, text).includes(normaliseForMatching(language, phrase));
 
 const choicePatterns: Record<Language, RegExp> = {
-  en: /\b(?:you can choose|you may choose|choose whether)\b/i,
+  en: /\b(?:you can choose|you may choose|choose whether|you can look away|you can turn away|you can hold a hand|you can squeeze a hand|you can breathe out|you can take a breath)\b/i,
   es: /(?:puedes elegir|puede elegir|elige si)/i,
   ar: /(?:يمكنك أن تختار|يمكنك اختيار)/u,
 };
