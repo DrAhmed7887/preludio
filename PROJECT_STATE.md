@@ -2,10 +2,9 @@
 
 ## Current slice
 
-Slice 3 — structured render. The server route accepts the intake contract, renders
-the seven fixed beats through OpenRouter, deterministically validates the assembled
-StoryScript, retries at most twice, and returns named structured failures when no
-candidate passes.
+Slice 4 — narration audio. A validated story is checked again before it reaches the
+OpenRouter speech endpoint. The resulting MP3 is held in memory and served from a
+same-origin route to the browser listening surface.
 
 ## Decisions
 
@@ -17,8 +16,11 @@ candidate passes.
   reaches the deterministic total-word refusal and is deferred for prompt-only
   calibration. Spanish and Arabic remain covered by the validator tests and are
   also deferred from live calibration.
+- Speech model: `mistralai/voxtral-mini-tts-2603` through OpenRouter, using its
+  available English neutral voice. A live English tier-10 MP3 was generated and
+  fetched from the app route with an `audio/mpeg` content type.
 
 ## Next work
 
-Slice 4 adds generated narration audio and the browser listening surface. It must
-remain downstream of the validator.
+Slice 5 adds the clinician approval gate and the visible refusal response. Audio
+and delivery remain downstream of that gate.
