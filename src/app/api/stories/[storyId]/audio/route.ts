@@ -2,7 +2,7 @@ import templateJson from "../../../../../../procedures/blood_draw.json";
 import { NextResponse } from "next/server";
 
 import { procedureTemplateSchema } from "@/lib/contracts";
-import { getAudio, getStory, isStoryApproved, storeAudio } from "@/lib/story-store";
+import { getAudio, getStory, isParentStoryAvailable, isStoryApproved, storeAudio } from "@/lib/story-store";
 import { synthesizeStory } from "@/lib/tts/synthesize-story";
 import { validateStory } from "@/lib/validator/validate-story";
 
@@ -39,7 +39,7 @@ export async function POST(_request: Request, context: RouteContext) {
 export async function GET(_request: Request, context: RouteContext) {
   const { storyId } = await context.params;
   const audio = getAudio(storyId);
-  if (!audio) {
+  if (!audio || !isParentStoryAvailable(storyId)) {
     return NextResponse.json({ reason: "audio_not_found" }, { status: 404 });
   }
 

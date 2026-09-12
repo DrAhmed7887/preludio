@@ -13,6 +13,20 @@ The WhatsApp number uses the Twilio sandbox; it is not a Business account. Hospi
 patient portals and EHR order screens are deployment targets, not existing
 integrations.
 
+## Demo scope and parent link
+
+One procedure is implemented: blood draw. Adding another procedure is one
+clinician-authored JSON file in `procedures/`; it is not model-authored clinical
+content. Live generation is unreliable at tiers 3 and 6, so the demonstration loads
+seeded, validator-approved English and Spanish tier-10 stories. The Twilio delivery
+path is implemented and authenticates, but there is no funded WhatsApp sender, so
+delivery is demonstrated in-app.
+
+After clinician approval, a parent receives a read-and-listen link using an opaque
+random identifier. It has no login or editable controls, expires after 24 hours, and
+shows only the approved narration and its voice note. It contains a first name or
+nickname only—no patient data.
+
 ## Hackathon delivery limitation
 
 For the demonstration, narration media is held in memory for the active session and

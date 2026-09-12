@@ -47,6 +47,10 @@ export default function Home() {
   const [isSeeded, setIsSeeded] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  const parentStoryUrl = storyId && typeof window !== "undefined"
+    ? `${window.location.origin}/s/${storyId}`
+    : "";
+
   async function submitIntake(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const result = intakeSchema.safeParse(intake);
@@ -352,6 +356,15 @@ export default function Home() {
             <p>{isApproved ? "AI-generated voice for clinician listening." : "Audio remains unavailable until approval."}</p>
             {audioUrl && <audio autoPlay controls ref={audioRef} src={audioUrl}>Your browser cannot play this audio.</audio>}
           </section>
+          {isApproved && audioUrl && parentStoryUrl && (
+            <section className="parent-link-panel">
+              <p className="status-label">What the parent receives</p>
+              <p>Read-and-listen link, available for 24 hours after approval.</p>
+              <div className="parent-link-actions">
+                <input aria-label="Parent story link — select to copy" readOnly value={parentStoryUrl} />
+              </div>
+            </section>
+          )}
           {isApproved && audioUrl && (
             <section className="delivery-preview">
               <p className="status-label">WhatsApp sandbox preview</p>
