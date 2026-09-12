@@ -81,13 +81,7 @@ async function generateCandidate(
     const completion = await client.chat.completions.create({
       model: OPENROUTER_MODEL,
       temperature: 0,
-      messages: [
-        {
-          role: "system",
-          content: "You are a constrained renderer. Obey every output ceiling and copy required anchors exactly. Never add a clinical fact beyond the supplied template.",
-        },
-        { role: "user", content: buildBeatPrompt(intake, template, index, priorFailures) },
-      ],
+      messages: [{ role: "user", content: buildBeatPrompt(intake, template, index, priorFailures) }],
       response_format: {
         type: "json_schema",
         json_schema: responseSchema(),

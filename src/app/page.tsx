@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 import {
   ConcernArchetype,
@@ -34,10 +35,15 @@ export default function Home() {
   const [formMessage, setFormMessage] = useState("");
   const [failures, setFailures] = useState<Array<{ rule: string; beat: number | null; detail: string; suggested_line?: string }>>([]);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isApproved, setIsApproved] = useState(false);
+  const [override, setOverride] = useState("");
+  const [overrideFailures, setOverrideFailures] = useState<Array<{ rule: string; detail: string; suggested_line?: string }>>([]);
   const [isRendering, setIsRendering] = useState(false);
-  const [isPreparingAudio, setIsPreparingAudio] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isCheckingOverride, setIsCheckingOverride] = useState(false);
   const [story, setStory] = useState<StoryScript | null>(null);
   const [storyId, setStoryId] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   async function submitIntake(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -49,6 +55,9 @@ export default function Home() {
 
     setFailures([]);
     setAudioUrl(null);
+    setIsApproved(false);
+    setOverride("");
+    setOverrideFailures([]);
     setIsRendering(true);
     setStory(null);
     setStoryId(null);
@@ -76,26 +85,66 @@ export default function Home() {
     }
   }
 
-  async function prepareAudio() {
+  async function checkOverride() {
     if (!storyId) return;
 
-    setIsPreparingAudio(true);
-    setFormMessage("Preparing narration audio after validation.");
+    setIsCheckingOverride(true);
     try {
-      const response = await fetch(`/api/stories/${storyId}/audio`, { method: "POST" });
+      const response = await fetch(`/api/stories/${storyId}/override`, {
+        body: JSON.stringify({ override }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
       const payload = await response.json();
-      if (!response.ok) {
-        setFailures(payload.failures ?? []);
-        setFormMessage(payload.detail ?? "Narration audio could not be prepared.");
+      setOverrideFailures(payload.failures ?? []);
+      if (response.ok) {
+        setFormMessage("This override did not trigger a validator refusal.");
         return;
       }
-      setAudioUrl(payload.audio_url as string);
-      setFormMessage("Narration audio is ready for clinician listening.");
+      setFormMessage("The override was refused by the validator.");
     } catch {
-      setFormMessage("The narration audio request could not be completed.");
+      setFormMessage("The override could not be checked.");
     } finally {
-      setIsPreparingAudio(false);
+      setIsCheckingOverride(false);
     }
+  }
+
+  async function approveAndPlay() {
+    if (!storyId) return;
+
+    setIsApproving(true);
+    try {
+      const approval = await fetch(`/api/stories/${storyId}/approval`, { method: "POST" });
+      const approvalPayload = await approval.json();
+      if (!approval.ok) {
+        setFailures(approvalPayload.failures ?? []);
+        setFormMessage("Approval could not be completed.");
+        return;
+      }
+      const audio = await fetch(`/api/stories/${storyId}/audio`, { method: "POST" });
+      const audioPayload = await audio.json();
+      if (!audio.ok) {
+        setFailures(audioPayload.failures ?? []);
+        setFormMessage(audioPayload.detail ?? "Narration audio could not be prepared.");
+        return;
+      }
+      flushSync(() => {
+        setAudioUrl(audioPayload.audio_url as string);
+        setIsApproved(true);
+      });
+      await audioRef.current?.play();
+      setFormMessage("Approved narration is playing for clinician listening.");
+    } catch {
+      setFormMessage("Approval completed, but playback needs a manual click.");
+    } finally {
+      setIsApproving(false);
+    }
+  }
+
+  function refuseStory() {
+    setAudioUrl(null);
+    setIsApproved(false);
+    setFormMessage("Narration refused. Nothing was prepared for delivery.");
   }
 
   return (
@@ -227,15 +276,43 @@ export default function Home() {
               <p>{beat.narration}</p>
             </article>
           ))}
+          <section className="override-panel">
+            <p className="status-label">Override check</p>
+            <label htmlFor="override">Clinician wording to check</label>
+            <textarea
+              id="override"
+              maxLength={280}
+              onChange={(event) => setOverride(event.target.value)}
+              placeholder="Tell her it won't hurt"
+              value={override}
+            />
+            <button disabled={!override.trim() || isCheckingOverride} onClick={checkOverride} type="button">
+              {isCheckingOverride ? "Checking wording…" : "Check wording"}
+            </button>
+            {overrideFailures.map((failure) => (
+              <article className="refusal-card" key={failure.rule}>
+                <p className="refusal-rule">{failure.rule}</p>
+                <p>This wording promises that a sensation will not hurt. Preludio uses truthful sensory descriptions instead.</p>
+                <p><strong>Alternative:</strong> {failure.suggested_line}</p>
+              </article>
+            ))}
+          </section>
+          <section className="approval-panel">
+            <p className="status-label">Clinician approval</p>
+            <p>Review the seven narration lines, then choose one action.</p>
+            {!isApproved && (
+              <div className="approval-actions">
+                <button disabled={isApproving} onClick={approveAndPlay} type="button">
+                  {isApproving ? "Approving…" : "Approve and play narration"}
+                </button>
+                <button className="secondary-action" disabled={isApproving} onClick={refuseStory} type="button">Refuse</button>
+              </div>
+            )}
+          </section>
           <section className="audio-panel">
             <p className="status-label">Narration audio</p>
-            <p>AI-generated voice for clinician listening.</p>
-            {!audioUrl && (
-              <button disabled={isPreparingAudio} onClick={prepareAudio} type="button">
-                {isPreparingAudio ? "Preparing audio…" : "Prepare narration audio"}
-              </button>
-            )}
-            {audioUrl && <audio controls src={audioUrl}>Your browser cannot play this audio.</audio>}
+            <p>{isApproved ? "AI-generated voice for clinician listening." : "Audio remains unavailable until approval."}</p>
+            {audioUrl && <audio autoPlay controls ref={audioRef} src={audioUrl}>Your browser cannot play this audio.</audio>}
           </section>
         </section>
       )}
