@@ -19,6 +19,20 @@ body {
 .eyebrow, .status-label { color: #5c4b93; font-size: .78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 h1 { max-width: 38rem; font-size: clamp(2.8rem, 8vw, 5.5rem); font-weight: 600; letter-spacing: -.06em; line-height: .95; }
 .intro { max-width: 34rem; color: #485565; font-size: 1.2rem; line-height: 1.6; }
+.how-it-works { border: 1px solid #dcd4c7; border-radius: 1rem; margin-top: 1.25rem; max-width: 42rem; overflow: hidden; }
+.how-it-works summary { align-items: center; color: #26313c; cursor: pointer; display: flex; font-size: 1rem; font-weight: 800; justify-content: space-between; list-style: none; padding: 1rem 1.15rem; }
+.how-it-works summary::-webkit-details-marker { display: none; }
+.how-it-works-hint { color: #5c4b93; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
+.how-it-works[open] .how-it-works-hint { font-size: 0; }
+.how-it-works[open] .how-it-works-hint::after { content: "Close flow"; font-size: .78rem; }
+.flow-steps { background: #fffdf8; border-top: 1px solid #dcd4c7; display: grid; gap: .7rem; list-style: none; margin: 0; padding: 1rem; }
+.flow-steps li { border: 1px solid #e3ddd3; border-radius: .75rem; display: grid; gap: .75rem; grid-template-columns: 1.9rem 1fr; padding: .9rem; }
+.flow-number { align-items: center; background: #eee9df; border-radius: 999px; color: #322866; display: inline-flex; font-size: .82rem; font-weight: 800; height: 1.9rem; justify-content: center; }
+.flow-title { color: #322866; font-size: .78rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.flow-steps li p:not(.flow-title) { color: #485565; font-size: .9rem; line-height: 1.4; }
+.flow-guarantee { border-left: 2px solid #7f70b4; color: #26313c !important; font-weight: 700; margin-top: .45rem; padding-left: .6rem; }
+.flow-gate { background: #f1effa; border-color: #7f70b4 !important; }
+.flow-gate .flow-number { background: #322866; color: #fff; }
 .status-card { max-width: 34rem; border: 1px solid #dcd4c7; border-radius: 1rem; background: #fffdf8; padding: 1.25rem; }
 .intake-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; max-width: 42rem; }
 .field { display: grid; gap: .4rem; }
@@ -67,4 +81,11 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 @media (max-width: 38rem) {
   .intake-form { grid-template-columns: 1fr; }
   .field-wide, button { grid-column: auto; }
+}
+
+@media (min-width: 60rem) {
+  .how-it-works { max-width: none; }
+  .flow-steps { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .flow-steps li { gap: .55rem; grid-template-columns: 1fr; }
+  .flow-number { width: 1.9rem; }
 }
