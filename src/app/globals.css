@@ -85,5 +85,5 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 
 @media (min-width: 60rem) {
   .how-it-works { max-width: none; }
-  .flow-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .flow-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
