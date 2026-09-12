@@ -8,6 +8,16 @@ const beatWordBudgets = {
   10: [26, 26, 26, 30, 26, 26, 22],
 } as const;
 
+function voiceDirection(intake: Intake): string {
+  if (intake.language !== "en") return "";
+
+  return [
+    `Write in warm, spoken English, as a kind adult sharing a short voice story with ${intake.child_first_name}, not a clinical list.`,
+    `Selected concern: ${intake.concern_archetype}. Let it guide the detail you foreground when it belongs to this beat, without adding a clinical fact.`,
+    "Use the name naturally, a contraction where it fits, and a natural spoken sentence rhythm.",
+  ].join(" ");
+}
+
 export function getBeatWordBudget(
   ageTier: Intake["age_tier"],
   beatIndex: number,
@@ -36,7 +46,12 @@ export function buildBeatPrompt(
   );
   const retryRequirements = feedback.map((failure) => {
     const item = beat.must_convey.find((mustConvey) => failure.detail.includes(mustConvey));
-    if (!item) return `Retry failure: ${failure.rule} — ${failure.detail}`;
+    if (!item) {
+      const correction = failure.suggested_line
+        ? ` Required correction: ${failure.suggested_line}`
+        : "";
+      return `Retry failure: ${failure.rule} — ${failure.detail}${correction}`;
+    }
 
     const options = (template.coverage_anchors.items[item]?.[intake.language] ?? [])
       .filter((option) => intake.age_tier !== 3 || !/\p{N}/u.test(option));
@@ -51,8 +66,9 @@ export function buildBeatPrompt(
       : "",
     `Clinical fact: ${beat.clinical_fact}`,
     `Sensory truth: ${beat.sensory_truth ?? "none"}`,
-    "The validator accepts only the exact substrings below. Copy one complete option for every required item; do not paraphrase it. Before returning, check that narration contains one option from every line.",
+    "The validator accepts only the exact substrings below. Weave one complete option for every required item into natural spoken narration; do not paraphrase it. Before returning, check that narration contains one option from every line.",
     ...anchors,
+    voiceDirection(intake),
     "Every required phrase must be in narration; child_action is not checked for coverage.",
     "Set child_action to null.",
     intake.age_tier === 3
