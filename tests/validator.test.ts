@@ -131,7 +131,7 @@ describe("story validation", () => {
   });
 
   it("enforces tier word and sentence boundaries plus tier-10 choice", () => {
-    const longTierThree = { ...validStory, age_tier: 3 as const, beats: [{ ...validStory.beats[0], narration: "one two three four five six seven eight nine." }, ...validStory.beats.slice(1)] };
+    const longTierThree = { ...validStory, age_tier: 3 as const, beats: [{ ...validStory.beats[0], narration: "one two three four five six seven eight nine ten eleven twelve thirteen." }, ...validStory.beats.slice(1)] };
     const longTierSix = { ...validStory, age_tier: 6 as const, beats: [{ ...validStory.beats[0], narration: "one two three four five six seven eight nine ten eleven twelve thirteen." }, ...validStory.beats.slice(1)] };
     const noChoiceTierTen = { ...validStory, beats: validStory.beats.map((beat) => beat.index === 5 ? { ...beat, narration: "what you are allowed to do." } : beat) };
     expect(ruleNames(longTierThree)).toContain("age_tier_sentence_words");
@@ -142,11 +142,11 @@ describe("story validation", () => {
   it("enforces each total-word boundary", () => {
     const tierThreeAtLimit = withNarration(
       { ...validStory, age_tier: 3 },
-      repeatedWords(60, 6),
+      repeatedWords(400, 6),
     );
     const tierThreeOverLimit = withNarration(
       { ...validStory, age_tier: 3 },
-      repeatedWords(61, 6),
+      repeatedWords(401, 6),
     );
     const tierSixAtLimit = withNarration(
       { ...validStory, age_tier: 6 },
@@ -170,11 +170,11 @@ describe("story validation", () => {
   it("enforces each sentence-word boundary", () => {
     const tierThreeAtLimit = withNarration(
       { ...validStory, age_tier: 3 },
-      repeatedWords(8, 8),
+      repeatedWords(12, 12),
     );
     const tierThreeOverLimit = withNarration(
       { ...validStory, age_tier: 3 },
-      repeatedWords(9, 9),
+      repeatedWords(13, 13),
     );
     const tierSixAtLimit = withNarration(
       { ...validStory, age_tier: 6 },

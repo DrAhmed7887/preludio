@@ -1,9 +1,9 @@
 import { Intake, ProcedureTemplate } from "../contracts";
 import type { ValidationFailure } from "../validator/validate-story";
 
-const sentenceLimits = { 3: 8, 6: 12, 10: 18 } as const;
+const sentenceLimits = { 3: 12, 6: 12, 10: 18 } as const;
 const beatWordBudgets = {
-  3: [10, 8, 9, 11, 5, 8, 5],
+  3: [55, 55, 60, 70, 50, 55, 45],
   6: [16, 16, 16, 22, 16, 16, 12],
   10: [26, 26, 26, 30, 26, 26, 22],
 } as const;

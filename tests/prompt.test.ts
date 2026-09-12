@@ -15,11 +15,11 @@ const intake: Intake = {
 };
 
 describe("English narration prompt", () => {
-  it("gives tier 3 enough room for named clinical anchors without exceeding its total limit", () => {
+  it("gives tier 3 room for a complete story without exceeding its total limit", () => {
     const budgets = Array.from({ length: 7 }, (_, index) => getBeatWordBudget(3, index));
 
-    expect(budgets).toEqual([10, 8, 9, 11, 5, 8, 5]);
-    expect(budgets.reduce((total, budget) => total + budget, 0)).toBeLessThanOrEqual(60);
+    expect(budgets).toEqual([55, 55, 60, 70, 50, 55, 45]);
+    expect(budgets.reduce((total, budget) => total + budget, 0)).toBeLessThanOrEqual(400);
   });
 
   it("asks for a named, spoken story voice and concern-aware emphasis", () => {
