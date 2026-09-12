@@ -33,8 +33,11 @@ export default function Home() {
   const [intake, setIntake] = useState<Intake>(initialIntake);
   const [formMessage, setFormMessage] = useState("");
   const [failures, setFailures] = useState<Array<{ rule: string; beat: number | null; detail: string; suggested_line?: string }>>([]);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isRendering, setIsRendering] = useState(false);
+  const [isPreparingAudio, setIsPreparingAudio] = useState(false);
   const [story, setStory] = useState<StoryScript | null>(null);
+  const [storyId, setStoryId] = useState<string | null>(null);
 
   async function submitIntake(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -45,8 +48,10 @@ export default function Home() {
     }
 
     setFailures([]);
+    setAudioUrl(null);
     setIsRendering(true);
     setStory(null);
+    setStoryId(null);
     setFormMessage("Rendering the narration from the approved template.");
 
     try {
@@ -58,6 +63,7 @@ export default function Home() {
       const payload = await response.json();
       if (response.ok) {
         setStory(payload.story as StoryScript);
+        setStoryId(payload.story_id as string);
         setFormMessage("Validated narration ready for clinician review.");
       } else {
         setFailures(payload.failures ?? []);
@@ -67,6 +73,28 @@ export default function Home() {
       setFormMessage("The rendering request could not be completed.");
     } finally {
       setIsRendering(false);
+    }
+  }
+
+  async function prepareAudio() {
+    if (!storyId) return;
+
+    setIsPreparingAudio(true);
+    setFormMessage("Preparing narration audio after validation.");
+    try {
+      const response = await fetch(`/api/stories/${storyId}/audio`, { method: "POST" });
+      const payload = await response.json();
+      if (!response.ok) {
+        setFailures(payload.failures ?? []);
+        setFormMessage(payload.detail ?? "Narration audio could not be prepared.");
+        return;
+      }
+      setAudioUrl(payload.audio_url as string);
+      setFormMessage("Narration audio is ready for clinician listening.");
+    } catch {
+      setFormMessage("The narration audio request could not be completed.");
+    } finally {
+      setIsPreparingAudio(false);
     }
   }
 
@@ -199,6 +227,16 @@ export default function Home() {
               <p>{beat.narration}</p>
             </article>
           ))}
+          <section className="audio-panel">
+            <p className="status-label">Narration audio</p>
+            <p>AI-generated voice for clinician listening.</p>
+            {!audioUrl && (
+              <button disabled={isPreparingAudio} onClick={prepareAudio} type="button">
+                {isPreparingAudio ? "Preparing audio…" : "Prepare narration audio"}
+              </button>
+            )}
+            {audioUrl && <audio controls src={audioUrl}>Your browser cannot play this audio.</audio>}
+          </section>
         </section>
       )}
     </main>
