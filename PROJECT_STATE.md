@@ -2,9 +2,9 @@
 
 ## Current slice
 
-Slice 5 — approval and refusal. A clinician can check a free-text wording override
-through the same validator that checks narration. The clinician must approve a valid
-story before the audio route will create or serve narration audio.
+Slice 6 — delivery preview. An approved story appears as an in-app WhatsApp sandbox
+preview with cover text, narration audio, and transcript. Live sandbox delivery is
+not configured locally.
 
 ## Decisions
 
@@ -23,8 +23,14 @@ story before the audio route will create or serve narration audio.
   validator-supplied truthful alternative for “tell her it won't hurt”.
 - English tier 6 is deferred from the demo after a live refusal on beat-4 coverage
   and a non-simple number. It did not reach the tier-3 total-word rule.
+- Rendering now makes four validated attempts. Retry prompts name each missed
+  must-convey item and show its exact localized anchors. English tier 10 passed two
+  of three live runs; the remaining refusal lacked the tier-10 real choice.
+- No Twilio environment values are configured locally. The in-memory audio route
+  also cannot survive a Cloud Run instance sleep, so it is not suitable as a live
+  sandbox media URL without durable public media storage.
 
 ## Next work
 
-Slice 6 adds a WhatsApp-style preview, then the live sandbox delivery path. Both
-remain downstream of clinician approval.
+Return to prompt-only Spanish calibration only if time remains, then deploy after
+the required runtime environment values are configured on Cloud Run.
