@@ -39,9 +39,9 @@ export const procedureBeatSchema = z.object({
 });
 
 export const coverageAnchorSchema = z.object({
-  en: z.array(z.string().min(1)).min(2).max(4),
-  es: z.array(z.string().min(1)).min(2).max(4),
-  ar: z.array(z.string().min(1)).min(2).max(4),
+  en: z.array(z.string().min(1)).min(2).max(6),
+  es: z.array(z.string().min(1)).min(2).max(6),
+  ar: z.array(z.string().min(1)).min(2).max(6),
 });
 
 export const procedureTemplateSchema = z.object({

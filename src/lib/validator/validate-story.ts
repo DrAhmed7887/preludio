@@ -77,7 +77,7 @@ function structureFailures(story: StoryScript, template: ProcedureTemplate): Val
     : [{ rule: "template_beat_structure", beat: null, detail: "Story beats must match the template count and order.", suggested_line: "Restore the template's seven beats in order." }];
 }
 
-function coverageFailures(story: StoryScript, template: ProcedureTemplate): ValidationFailure[] {
+export function validateCoverage(story: StoryScript, template: ProcedureTemplate): ValidationFailure[] {
   return template.beats.flatMap((templateBeat, index) => {
     const narration = story.beats[index]?.narration ?? "";
     return templateBeat.must_convey
@@ -179,7 +179,7 @@ function keepsakeFailures(story: StoryScript): ValidationFailure[] {
 export function validateStory(story: StoryScript, template: ProcedureTemplate): ValidationResult {
   const failures = [
     ...structureFailures(story, template),
-    ...coverageFailures(story, template),
+    ...validateCoverage(story, template),
     ...sensoryFailures(story, template),
     ...reassuranceFailures(story),
     ...ageTierFailures(story),
