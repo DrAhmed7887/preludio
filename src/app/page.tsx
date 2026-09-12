@@ -193,6 +193,66 @@ export default function Home() {
           The four clinical parameters shape the story. The child&apos;s name is a
           label for the narration.
         </p>
+        <details className="how-it-works">
+          <summary>
+            <span>How it works</span>
+            <span className="how-it-works-hint">Open flow</span>
+          </summary>
+          <ol className="flow-steps">
+            <li>
+              <span className="flow-number">1</span>
+              <div>
+                <p className="flow-title">Clinician order</p>
+                <p>name · procedure · age tier · language · concern</p>
+              </div>
+            </li>
+            <li>
+              <span className="flow-number">2</span>
+              <div>
+                <p className="flow-title">Clinical template</p>
+                <p>seven fixed beats, written and signed off by a clinician</p>
+                <p className="flow-guarantee">The model cannot add a step, drop one, or change what is clinically true.</p>
+              </div>
+            </li>
+            <li>
+              <span className="flow-number">3</span>
+              <div>
+                <p className="flow-title">Render</p>
+                <p>the model writes language and register only</p>
+                <p className="flow-guarantee">Only the words change — the clinical facts come from the template.</p>
+              </div>
+            </li>
+            <li className="flow-gate">
+              <span className="flow-number">4</span>
+              <div>
+                <p className="flow-title">Validator</p>
+                <p>deterministic checks, before anything is produced</p>
+                <p className="flow-guarantee">If a check fails, nothing is generated and the reason is shown.</p>
+              </div>
+            </li>
+            <li>
+              <span className="flow-number">5</span>
+              <div>
+                <p className="flow-title">Retry or refuse</p>
+                <p>up to four attempts, then it refuses and says why</p>
+              </div>
+            </li>
+            <li>
+              <span className="flow-number">6</span>
+              <div>
+                <p className="flow-title">Clinician approves</p>
+                <p>nothing reaches a parent unapproved</p>
+              </div>
+            </li>
+            <li>
+              <span className="flow-number">7</span>
+              <div>
+                <p className="flow-title">Parent receives</p>
+                <p>a link — narration and a voice note, no app, no account</p>
+              </div>
+            </li>
+          </ol>
+        </details>
         <div className="seed-actions">
           <button disabled={isLoadingSeed} onClick={() => loadSeed("en")} type="button">Load English tier 10</button>
           <button disabled={isLoadingSeed} onClick={() => loadSeed("es")} type="button">Load Spanish tier 10</button>
