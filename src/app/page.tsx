@@ -39,10 +39,12 @@ export default function Home() {
   const [override, setOverride] = useState("");
   const [overrideFailures, setOverrideFailures] = useState<Array<{ rule: string; detail: string; suggested_line?: string }>>([]);
   const [isRendering, setIsRendering] = useState(false);
+  const [isLoadingSeed, setIsLoadingSeed] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [isCheckingOverride, setIsCheckingOverride] = useState(false);
   const [story, setStory] = useState<StoryScript | null>(null);
   const [storyId, setStoryId] = useState<string | null>(null);
+  const [isSeeded, setIsSeeded] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   async function submitIntake(event: FormEvent<HTMLFormElement>) {
@@ -55,6 +57,7 @@ export default function Home() {
 
     setFailures([]);
     setAudioUrl(null);
+    setIsSeeded(false);
     setIsApproved(false);
     setOverride("");
     setOverrideFailures([]);
@@ -82,6 +85,30 @@ export default function Home() {
       setFormMessage("The rendering request could not be completed.");
     } finally {
       setIsRendering(false);
+    }
+  }
+
+  async function loadSeed(language: "en" | "es") {
+    setIsLoadingSeed(true);
+    setFailures([]);
+    setAudioUrl(null);
+    setIsApproved(false);
+    try {
+      const response = await fetch("/api/stories/seed", {
+        body: JSON.stringify({ language }), headers: { "Content-Type": "application/json" }, method: "POST",
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setFailures(payload.failures ?? []);
+        setFormMessage("The seeded story could not be loaded.");
+        return;
+      }
+      setStory(payload.story as StoryScript);
+      setStoryId(payload.story_id as string);
+      setIsSeeded(true);
+      setFormMessage("Pre-generated, validator-approved narration loaded.");
+    } finally {
+      setIsLoadingSeed(false);
     }
   }
 
@@ -128,12 +155,18 @@ export default function Home() {
         setFormMessage(audioPayload.detail ?? "Narration audio could not be prepared.");
         return;
       }
+      const delivery = await fetch(`/api/stories/${storyId}/delivery`, { method: "POST" });
+      const deliveryPayload = await delivery.json();
       flushSync(() => {
         setAudioUrl(audioPayload.audio_url as string);
         setIsApproved(true);
       });
       await audioRef.current?.play();
-      setFormMessage("Approved narration is playing for clinician listening.");
+      setFormMessage(delivery.ok
+        ? "Approved narration is playing and the WhatsApp sandbox accepted delivery."
+        : deliveryPayload.reason === "delivery_not_configured"
+          ? "Approved narration is playing. Sandbox delivery is not configured."
+          : "Approved narration is playing. Sandbox delivery was not accepted.");
     } catch {
       setFormMessage("Approval completed, but playback needs a manual click.");
     } finally {
@@ -156,6 +189,10 @@ export default function Home() {
           The four clinical parameters shape the story. The child&apos;s name is a
           label for the narration.
         </p>
+        <div className="seed-actions">
+          <button disabled={isLoadingSeed} onClick={() => loadSeed("en")} type="button">Load English tier 10</button>
+          <button disabled={isLoadingSeed} onClick={() => loadSeed("es")} type="button">Load Spanish tier 10</button>
+        </div>
       </header>
 
       <form className="intake-form" onSubmit={submitIntake}>
@@ -270,6 +307,7 @@ export default function Home() {
       {story && (
         <section className="story-output">
           <p className="status-label">Validated narration</p>
+          {isSeeded && <p className="seed-status">Pre-generated, validator-approved.</p>}
           {story.beats.map((beat) => (
             <article className="narration-card" key={beat.index}>
               <p className="beat-index">Beat {beat.index}</p>

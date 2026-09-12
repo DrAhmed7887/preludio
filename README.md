@@ -13,6 +13,13 @@ The WhatsApp number uses the Twilio sandbox; it is not a Business account. Hospi
 patient portals and EHR order screens are deployment targets, not existing
 integrations.
 
+## Hackathon delivery limitation
+
+For the demonstration, narration media is held in memory for the active session and
+the Cloud Run service is pinned warm. A Twilio sandbox send is started immediately
+after clinician approval, while that media remains available. Production deployment
+would use object storage for durable public media; this project does not include it.
+
 ## Local development
 
 ```sh
