@@ -13,7 +13,7 @@ import { ValidationFailure, validateStory } from "../validator/validate-story";
 import { buildBeatPrompt } from "./prompt";
 
 export const OPENROUTER_MODEL = "openai/gpt-4o-mini";
-export const MAX_RENDER_ATTEMPTS = 2;
+export const MAX_RENDER_ATTEMPTS = 4;
 
 export type RenderResult =
   | { ok: true; story: StoryScript }

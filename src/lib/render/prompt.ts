@@ -34,6 +34,14 @@ export function buildBeatPrompt(
   const feedback = priorFailures.filter(
     (failure) => failure.beat === null || failure.beat === beat.id,
   );
+  const retryRequirements = feedback.map((failure) => {
+    const item = beat.must_convey.find((mustConvey) => failure.detail.includes(mustConvey));
+    if (!item) return `Retry failure: ${failure.rule} — ${failure.detail}`;
+
+    const options = (template.coverage_anchors.items[item]?.[intake.language] ?? [])
+      .filter((option) => intake.age_tier !== 3 || !/\p{N}/u.test(option));
+    return `Retry requirement: missing ${item}. Copy exactly one: ${options.map((option) => `“${option}”`).join(" OR ")}.`;
+  });
 
   return [
     `Render beat ${beat.id} only in ${intake.language} for ${intake.child_first_name}.`,
@@ -48,8 +56,6 @@ export function buildBeatPrompt(
       ? "For tier 3, use only one complete required phrase per item in short sentences. Do not add any other words, introduction, or explanation."
       : "Do not add a clinical step or promise that a sensation will not hurt.",
     "Return narration and child_action only.",
-    feedback.length > 0
-      ? `Correct these prior validator failures: ${JSON.stringify(feedback)}`
-      : "",
+    ...retryRequirements,
   ].filter(Boolean).join("\n");
 }
