@@ -314,6 +314,26 @@ export default function Home() {
             <p>{isApproved ? "AI-generated voice for clinician listening." : "Audio remains unavailable until approval."}</p>
             {audioUrl && <audio autoPlay controls ref={audioRef} src={audioUrl}>Your browser cannot play this audio.</audio>}
           </section>
+          {isApproved && audioUrl && (
+            <section className="delivery-preview">
+              <p className="status-label">WhatsApp sandbox preview</p>
+              <div className="chat-thread">
+                <article className="cover-card">
+                  <p>PRELUDIO</p>
+                  <h2>Blood draw</h2>
+                  <span>A voice story for {story.child_first_name}</span>
+                </article>
+                <article className="chat-bubble audio-bubble">
+                  <p>Voice story</p>
+                  <audio controls src={audioUrl}>Your browser cannot play this audio.</audio>
+                </article>
+                <article className="chat-bubble transcript-bubble">
+                  <p className="status-label">Transcript</p>
+                  {story.beats.map((beat) => <p key={beat.index}>{beat.narration}</p>)}
+                </article>
+              </div>
+            </section>
+          )}
         </section>
       )}
     </main>
