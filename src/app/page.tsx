@@ -51,14 +51,7 @@ export default function Home() {
     ? `${window.location.origin}/s/${storyId}`
     : "";
 
-  async function submitIntake(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const result = intakeSchema.safeParse(intake);
-    if (!result.success) {
-      setFormMessage(result.error.issues[0]?.message ?? "Check the intake values.");
-      return;
-    }
-
+  async function renderNarration(nextIntake: Intake) {
     setFailures([]);
     setAudioUrl(null);
     setIsSeeded(false);
@@ -68,11 +61,11 @@ export default function Home() {
     setIsRendering(true);
     setStory(null);
     setStoryId(null);
-    setFormMessage("Rendering the narration from the approved template.");
+    setFormMessage("Rendering a tailored narration from the approved template.");
 
     try {
       const response = await fetch("/api/stories/render", {
-        body: JSON.stringify(result.data),
+        body: JSON.stringify(nextIntake),
         headers: { "Content-Type": "application/json" },
         method: "POST",
       });
@@ -80,7 +73,7 @@ export default function Home() {
       if (response.ok) {
         setStory(payload.story as StoryScript);
         setStoryId(payload.story_id as string);
-        setFormMessage("Validated narration ready for clinician review.");
+        setFormMessage(`Validated narration tailored for ${nextIntake.child_first_name} is ready for clinician review.`);
       } else {
         setFailures(payload.failures ?? []);
         setFormMessage(payload.detail ?? "Rendering did not produce a validated story.");
@@ -90,6 +83,29 @@ export default function Home() {
     } finally {
       setIsRendering(false);
     }
+  }
+
+  async function submitIntake(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const result = intakeSchema.safeParse(intake);
+    if (!result.success) {
+      setFormMessage(result.error.issues[0]?.message ?? "Check the intake values.");
+      return;
+    }
+
+    await renderNarration(result.data);
+  }
+
+  async function renderEnglishTierTen() {
+    const nextIntake: Intake = { ...intake, age_tier: 10, language: "en" };
+    const result = intakeSchema.safeParse(nextIntake);
+    if (!result.success) {
+      setFormMessage(result.error.issues[0]?.message ?? "Enter a first name or nickname.");
+      return;
+    }
+
+    setIntake(result.data);
+    await renderNarration(result.data);
   }
 
   async function loadSeed(language: "en" | "es") {
@@ -254,8 +270,8 @@ export default function Home() {
           </ol>
         </details>
         <div className="seed-actions">
-          <button disabled={isLoadingSeed} onClick={() => loadSeed("en")} type="button">Load English tier 10</button>
-          <button disabled={isLoadingSeed} onClick={() => loadSeed("es")} type="button">Load Spanish tier 10</button>
+          <button disabled={isRendering} onClick={renderEnglishTierTen} type="button">Render English tier 10</button>
+          <button disabled={isLoadingSeed} onClick={() => loadSeed("es")} type="button">Load Spanish tier 10 sample</button>
         </div>
       </header>
 
@@ -372,6 +388,7 @@ export default function Home() {
         <section className="story-output">
           <p className="status-label">Validated narration</p>
           {isSeeded && <p className="seed-status">Pre-generated, validator-approved.</p>}
+          {!isSeeded && <p className="seed-status">Tailored for {story.child_first_name} through the validated renderer.</p>}
           {story.beats.map((beat) => (
             <article className="narration-card" key={beat.index}>
               <p className="beat-index">Beat {beat.index}</p>

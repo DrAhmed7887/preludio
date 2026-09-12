@@ -45,7 +45,10 @@ export function buildBeatPrompt(
 
   return [
     `Render beat ${beat.id} only in ${intake.language} for ${intake.child_first_name}.`,
-    `Your narration field must contain at most ${getBeatWordBudget(intake.age_tier, beatIndex)} words and never more than ${sentenceLimits[intake.age_tier] - 2} words per sentence. Count words before answering. Do not use the child's name unless it still fits.`,
+    `Your narration field must contain at most ${getBeatWordBudget(intake.age_tier, beatIndex)} words and never more than ${sentenceLimits[intake.age_tier] - 2} words per sentence. Count words before answering.`,
+    beat.id === 1 && intake.language === "en"
+      ? `Beat 1 must include the exact name “${intake.child_first_name}”.`
+      : "",
     `Clinical fact: ${beat.clinical_fact}`,
     `Sensory truth: ${beat.sensory_truth ?? "none"}`,
     "The validator accepts only the exact substrings below. Copy one complete option for every required item; do not paraphrase it. Before returning, check that narration contains one option from every line.",
