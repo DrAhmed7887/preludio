@@ -186,7 +186,7 @@ export default function Home() {
         ? "Approved narration is playing and the WhatsApp sandbox accepted delivery."
         : deliveryPayload.reason === "delivery_not_configured"
           ? "Approved narration is playing. Sandbox delivery is not configured."
-          : "Approved narration is playing. Sandbox delivery was not accepted.");
+          : `Approved narration is playing. Sandbox delivery was not accepted${deliveryPayload.twilio_error_code ? ` (Twilio ${deliveryPayload.twilio_error_code})` : ""}.`);
     } catch {
       setFormMessage("Approval completed, but playback needs a manual click.");
     } finally {

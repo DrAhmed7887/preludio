@@ -17,7 +17,10 @@ function twilioSettings() {
   const to = process.env.TWILIO_WHATSAPP_TO;
   if (!accountSid || !from || !to) return null;
   if (apiKeySid && apiKeySecret) return { accountSid, credentialSid: apiKeySid, credentialSecret: apiKeySecret, from, to };
-  if (authToken) return { accountSid, credentialSid: accountSid, credentialSecret: authToken, from, to };
+  // API Key SIDs begin with SK and cannot authenticate an Account SID as a token.
+  if (authToken && authToken.length === 32 && !/^(AC|SK)/.test(authToken)) {
+    return { accountSid, credentialSid: accountSid, credentialSecret: authToken, from, to };
+  }
   return null;
 }
 
@@ -46,7 +49,13 @@ export async function POST(request: Request, context: RouteContext) {
     `https://api.twilio.com/2010-04-01/Accounts/${settings.accountSid}/Messages.json`,
     { method: "POST", headers: { Authorization: `Basic ${credentials}`, "Content-Type": "application/x-www-form-urlencoded" }, body },
   );
-  if (!response.ok) return NextResponse.json({ reason: "delivery_failed" }, { status: 502 });
+  if (!response.ok) {
+    const error = await response.json().catch(() => null) as { code?: number } | null;
+    return NextResponse.json(
+      { reason: "delivery_failed", twilio_error_code: error?.code ?? null },
+      { status: 502 },
+    );
+  }
 
   const message = await response.json() as { sid: string; status: string };
   return NextResponse.json({ message_sid: message.sid, status: message.status }, { status: 201 });
