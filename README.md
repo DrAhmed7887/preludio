@@ -1,5 +1,7 @@
 # Preludio
 
+[![ci](https://github.com/DrAhmed7887/preludio/actions/workflows/ci.yml/badge.svg)](https://github.com/DrAhmed7887/preludio/actions/workflows/ci.yml)
+
 Preludio is a governed WhatsApp voice-story agent that helps clinicians prepare
 children for procedures. A nurse, child-life specialist, or physician chooses a
 procedure, age tier, language, and concern archetype. The system renders committed
@@ -45,3 +47,7 @@ npm run dev
 npm run guard
 npm test
 ```
+
+## License
+
+Code: [MIT](LICENSE).

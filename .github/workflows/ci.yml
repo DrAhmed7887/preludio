@@ -1,0 +1,47 @@
+# Adapted from the claude-setup hackathon template (ci.yml): same secret scan,
+# then the vitest suite and the repo's own vocabulary guard.
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # the guard also reads commit history
+      - name: Secret and personal-link scan
+        env:
+          PERSONAL_PATTERNS: ${{ secrets.PERSONAL_PATTERNS }}
+        run: |
+          cat <<'EOF2' > "$RUNNER_TEMP/patterns.txt"
+          sk-ant-[A-Za-z0-9_-]{10,}
+          ghp_[A-Za-z0-9]{20,}
+          AKIA[0-9A-Z]{16}
+          AIza[0-9A-Za-z_-]{30,}
+          -----BEGIN [A-Z ]*PRIVATE KEY-----
+          https?://(www\.|app\.)?notion\.(so|com)/
+          https?://(drive|docs)\.google\.com/
+          EOF2
+          if [ -n "$PERSONAL_PATTERNS" ]; then
+            printf '%s\n' "$PERSONAL_PATTERNS" >> "$RUNNER_TEMP/patterns.txt"
+          fi
+          set +e
+          hits=$(grep -rl -i -E -f "$RUNNER_TEMP/patterns.txt" --exclude-dir=.git --exclude-dir=__pycache__ --exclude-dir=node_modules .)
+          rc=$?
+          set -e
+          if [ $rc -eq 0 ]; then echo "secret-like content in:"; echo "$hits"; exit 1; fi
+          if [ $rc -ne 1 ]; then echo "secret scan error (exit $rc)"; exit 1; fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - run: npm run guard
